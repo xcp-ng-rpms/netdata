@@ -198,8 +198,9 @@ Requires: freeipmi
 # end - freeipmi plugin dependencies
 
 # CUPS plugin dependencies
-BuildRequires: cups-devel
-Requires: cups
+# Commented to avoid lots of runtime deps.
+# BuildRequires: cups-devel
+# Requires: cups
 # end - cups plugin dependencies
 
 # Prometheus remote write dependencies
