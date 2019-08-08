@@ -337,48 +337,14 @@ rm -rf "${RPM_BUILD_ROOT}"
 
 %files
 %doc README.md
-%defattr(-,root,netdata)
 
-%dir %{_sysconfdir}/%{name}
-%dir %{_libdir}/%{name}
-
-%config(noreplace) %{_sysconfdir}/%{name}/*.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 
-%{_libdir}/%{name}
-
-%defattr(0755,netdata,netdata,0755)
-%{_libexecdir}/%{name}
-%{_sbindir}/%{name}
-%{_sysconfdir}/%{name}/edit-config
-
-%defattr(4750,root,netdata,0750)
-
-%dir %{_libexecdir}/%{name}/python.d
-%dir %{_libexecdir}/%{name}/charts.d
-%dir %{_libexecdir}/%{name}/plugins.d
-%dir %{_libexecdir}/%{name}/node.d
-
-%caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0550,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
-
-%if %{with netns}
-# cgroup-network detects the network interfaces of CGROUPs
-# it must be able to use setns() and run cgroup-network-helper.sh as root
-# the helper script reads /proc/PID/fdinfo/* files, runs virsh, etc.
-%caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
-%attr(0550,root,root) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
-%endif
-
-# perf plugin
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
-
-
-# freeipmi files
-%caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
-%dir %{_datadir}/%{name}
-
-%defattr(0750,netdata,netdata,0755)
-
+# /etc/netdata
+# must the netdata user have write rights over /etc/netdata/netdata.conf?
+# it didn't in netdata.spec.in but does if installed from netdata-installer.sh
+%dir %{_sysconfdir}/%{name}
+%config(noreplace) %{_sysconfdir}/%{name}/*.conf
 %dir %{_sysconfdir}/%{name}/health.d
 %dir %{_sysconfdir}/%{name}/python.d
 %dir %{_sysconfdir}/%{name}/charts.d
@@ -387,27 +353,55 @@ rm -rf "${RPM_BUILD_ROOT}"
 %dir %{_sysconfdir}/%{name}/ssl
 %dir %{_sysconfdir}/%{name}/node.d
 %dir %{_sysconfdir}/%{name}/statsd.d
-%{_libdir}/%{name}/conf.d/
+%attr(0755,root,root) %{_sysconfdir}/%{name}/edit-config
 
+# systemd service or initscript
 %if %{with systemd}
 %{_unitdir}/netdata.service
 %else
 %{_sysconfdir}/rc.d/init.d/netdata
 %endif
 
-# Enforce 0644 for files and 0755 for directories
-# for the netdata web directory
-%defattr(0644,root,netdata,0755)
-%{_datadir}/%{name}/web
+%{_libdir}/%{name}
+%{_sbindir}/%{name}
+%{_datadir}/%{name}
 
-# Enforce 0660 for files and 0770 for directories
-# for the netdata lib, cache and log dirs
-%defattr(0660,root,netdata,0770)
 %attr(0770,netdata,netdata) %dir %{_localstatedir}/cache/%{name}
 %attr(0755,netdata,root) %dir %{_localstatedir}/log/%{name}
 %attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}
 %attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}/registry
 
+# /usr/libexec/netdata
+%defattr(0755,root,root,0755)
+%{_libexecdir}/%{name}
+
+# some plugins deserve a special handling
+# Why 0550 and not 0750?
+%caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0550,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
+
+%if %{with netns}
+# cgroup-network detects the network interfaces of CGROUPs
+# it must be able to use setns() and run cgroup-network-helper.sh as root
+# the helper script reads /proc/PID/fdinfo/* files, runs virsh, etc.
+
+# Why both cap_setuid and the SETUID bit?
+%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
+# Why 0550 instead of 0750?
+%attr(0550,root,root) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
+%endif
+
+# perf plugin
+# Why both cap_setuid and the SETUID bit?
+%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
+
+# xenstat plugin
+# TODO: use a lighter capability instead of the all-or-nothing setuid bit?
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
+
+# freeipmi plugin
+# Why both cap_setuid and the SETUID bit?
+# Why 4550 instead of 4750?
+%caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 %changelog
 * Fri Jun 28 2019 Pavlos Emm. Katsoulakis <paul@netdata.cloud> - 0.0.0-7
