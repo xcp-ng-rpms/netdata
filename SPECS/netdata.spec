@@ -351,6 +351,10 @@ getent group netdata > /dev/null || groupadd -r netdata
 getent passwd netdata > /dev/null || useradd -r -g netdata -c "NetData User" -s /sbin/nologin -d /var/log/%{name} netdata
 
 %post
+if [ $1 -eq 1 ]; then
+    # Disable telemetry by default on first install
+    touch /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
 sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
 sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
@@ -368,6 +372,9 @@ echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install
 
 %postun
 %systemd_postun_with_restart %{name}.service
+if [ $1 -eq 0 ]; then
+    rm -f /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 
 %files
 %doc README.md CHANGELOG.md README-packager.md
@@ -437,6 +444,7 @@ echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - Add Requires for libyaml
 - Enable and start systemd service at install
+- Disable telemetry by default
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
