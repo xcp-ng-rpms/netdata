@@ -92,6 +92,8 @@ Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_v
 Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/go.d.plugin-v%{go_plugin_version}.linux-amd64
 URL:		http://my-netdata.io
 
+Patch1:		netdata-1.16.1-update-netdata-conf.XCP-ng.patch
+
 # #####################################################################
 # Core build/install/runtime dependencies
 # #####################################################################
@@ -237,7 +239,7 @@ so that you can get insights of what is happening now and what just
 happened, on your systems and applications.
 
 %prep
-%setup -q -n %{name}-%{version}
+%autosetup -p1 -n %{name}-%{version}
 
 %build
 # Conf step

@@ -1,0 +1,39 @@
+--- a/system/netdata.conf	2019-08-09 14:56:47.202785620 +0200
++++ b/system/netdata.conf	2019-08-09 14:55:21.062343797 +0200
+@@ -1,24 +1,25 @@
+ # netdata configuration
+ #
+-# You can download the latest version of this file, using:
+-#
+-#  wget -O /etc/netdata/netdata.conf http://localhost:19999/netdata.conf
+-# or
+-#  curl -o /etc/netdata/netdata.conf http://localhost:19999/netdata.conf
+-#
+-# You can uncomment and change any of the options below.
+-# The value shown in the commented settings, is the default value.
++# This is a minimal configuration file for XCP-ng.
++# You can download a version of this file with ALL possible values, using:
+ #
++#  wget http://localhost:19999/netdata.conf
+ 
+ [global]
+     run as user = netdata
+ 
+-    # the default database size - 1 hour
+-    history = 3600
++    # the default database size, in seconds
++    # Count approx 25MB of RAM per hour of data
++    history = 7200
+ 
+     # by default do not expose the netdata port
++    # avoid changing this value: see the [web] section instead
+     bind to = localhost
+ 
+ [web]
+     web files owner = root
+-    web files group = netdata
++    web files group = root
++
++    default port = 19999
++    bind to = localhost
++    allow netdata.conf from = localhost
