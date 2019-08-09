@@ -327,6 +327,10 @@ getent passwd netdata >/dev/null || \
 
 %post
 %{netdata_init_post}
+# Disable telemetry by default on first install
+if [ $1 -eq 1 ]; then
+    touch /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 
 %preun
 %{netdata_init_preun}
