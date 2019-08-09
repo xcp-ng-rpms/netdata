@@ -350,6 +350,10 @@ getent group netdata > /dev/null || groupadd -r netdata
 getent passwd netdata > /dev/null || useradd -r -g netdata -G systemd-journal -c "NetData User" -s /sbin/nologin -d /var/log/%{name} netdata
 
 %post
+if [ $1 -eq 1 ]; then
+    # Disable telemetry by default on first install
+    touch /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
 sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
 sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
@@ -367,6 +371,9 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 
 %postun
 %systemd_postun_with_restart %{name}.service
+if [ $1 -eq 0 ]; then
+    rm -f /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 
 %files
 %doc README.md CHANGELOG.md README-packager.md
@@ -488,6 +495,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 - Disable cups log2journal and exporter_mongodb
 - Use netdata.service file for systemd < 235
 - Enable and start systemd service at install, restart at upgrade
+- Disable telemetry by default
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
