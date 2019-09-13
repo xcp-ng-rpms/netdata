@@ -1,7 +1,11 @@
-### Adapted from https://github.com/netdata/netdata/blob/v1.16.1/netdata.spec.in
+### Adapted from https://github.com/netdata/netdata/blob/v1.17.1/netdata.spec.in
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 %global contentdir %{_datadir}/netdata
+
+
+#TODO: Temporary fix for the build-id error during go.d plugin set up
+%global _missing_build_ids_terminate_build 0
 
 # This is temporary and should eventually be resolved. This bypasses
 # the default rhel __os_install_post which throws a python compile
@@ -13,6 +17,7 @@
 %define _sysconfdir /etc
 %define _localstatedir /var
 %define _libexecdir /usr/libexec
+%define _libdir /usr/lib
 
 #
 # Conditional build:
@@ -80,19 +85,22 @@ fi \
 
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
-Version:	1.16.1
+Version:	1.17.1
 Release:	1%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/releases/download/%{version}/%{name}-%{version}.tar.gz
-# Go plugin
-# When updating this value, ensure correct checksums in packaging/go.d.checksums
-%define go_plugin_version 0.7.0
-Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
-Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/go.d.plugin-v%{go_plugin_version}.linux-amd64
 URL:		http://my-netdata.io
 
-Patch1:		netdata-1.16.1-update-netdata-conf.XCP-ng.patch
+# XCP-ng handling of the Go plugin (we don't want downloads during RPM build!)
+# Update this version manually based on packaging/go.d.version
+%define go_plugin_version 0.8.0
+%define go_plugin_basename go.d.plugin-v%{go_plugin_version}.linux-amd64
+Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
+Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/%{go_plugin_basename}.tar.gz
+
+# XCP-ng patches
+Patch1000:	netdata-1.16.1-update-netdata-conf.XCP-ng.patch
 
 # #####################################################################
 # Core build/install/runtime dependencies
@@ -200,13 +208,14 @@ Requires: freeipmi
 # end - freeipmi plugin dependencies
 
 # CUPS plugin dependencies
-# Commented to avoid lots of runtime deps.
+# XCP-ng: CUPS plugin disabled to avoid LOTS of runtime deps.
 # BuildRequires: cups-devel
 # Requires: cups
 # end - cups plugin dependencies
 
 # Prometheus remote write dependencies
 BuildRequires: snappy-devel
+# XCP-ng: added dependency on version 3, else prometheus stuff can't build
 BuildRequires: protobuf-devel >= 3
 %if 0%{?suse_version}
 BuildRequires: libprotobuf-c-devel
@@ -221,6 +230,7 @@ Requires: libprotobuf15
 %else
 Requires: snappy
 Requires: protobuf-c
+# XCP-ng: added dependency on version 3, else prometheus stuff can't build
 Requires: protobuf >= 3
 %endif
 # end - prometheus remote write dependencies
@@ -249,6 +259,7 @@ autoreconf -ivf
 	--sysconfdir="%{_sysconfdir}" \
 	--localstatedir="%{_localstatedir}" \
 	--libexecdir="%{_libexecdir}" \
+        --libdir="%{_libdir}" \
 	--with-zlib \
 	--with-math \
 	--with-user=netdata \
@@ -305,12 +316,15 @@ install -m 755 system/netdata-init-d \
 
 # ############################################################
 # Package Go within netdata (TBD: Package it separately)
+# XCP-ng: vastly simplified this to avoid downloading stuff from the internet
 install_go() {
 	if [ -z "${NETDATA_DISABLE_GO+x}" ]; then
 		echo >&2 "Install go.d.plugin"
 		# Install files
-		tar -xf %{SOURCE1} -C "${RPM_BUILD_ROOT}%{_libdir}/%{name}/conf.d/"
-		cp %{SOURCE2} "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/go.d.plugin"
+		tar -xf %{SOURCE1} -C "%{buildroot}%{_libdir}/%{name}/conf.d/"
+		tar -xf %{SOURCE2} -C "%{buildroot}%{_libexecdir}/%{name}/plugins.d/"
+		mv "%{buildroot}%{_libexecdir}/%{name}/plugins.d/"{%{go_plugin_basename},go.d.plugin}
+		chmod 644 "%{buildroot}%{_libexecdir}/%{name}/plugins.d/go.d.plugin"
 	fi
 	return 0
 }
@@ -410,27 +424,6 @@ rm -rf "${RPM_BUILD_ROOT}"
 %caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 %changelog
-* Fri Jun 28 2019 Pavlos Emm. Katsoulakis <paul@netdata.cloud> - 0.0.0-7
-- Raise the path overrides to the spec file level, not just the configure.
-- Adjust tighter permissions on some folders, based on what we did on our installer
-- Introduce go.d plugin download and install, to include it on the package (Temporarily, to become separate package on next iteration)
-* Tue Jun 25 2019 Pavlos Emm. Katsoulakis <paul@netdata.cloud> - 0.0.0-6
-- Adjust dependency list: Some packages are missing on some distros, adopt to build successfully
-* Mon Jun 24 2019 Pavlos Emm. Katsoulakis <paul@netdata.cloud> - 0.0.0-5
-Another pass on cleaning up pre/post installation steps
-- Sync permission and ownership on files and directories
-* Sun Jun 16 2019 Pavlos Emm. Katsoulakis <paul@netdata.cloud> - 0.0.0-4
-First draft refactor on package dependencies section
-- Remove freeipmi/nfacct plugin flags. We auto-detect all plugins by decision
-- Start refactor of package dependencies
-- Add missing dependencies, with respect to distro peculiarities
-- Adjust existing dependencies, so that distro-specific package names is applied
-* Wed Jan 02 2019 Pawel Krupa <pkrupa@redhat.com> - 0.0.0-3
-- Temporary set version statically
-- Fix changelog ordering
-- Comment-out node.d configuration directory 
-* Wed Jan 02 2019 Pawel Krupa <pkrupa@redhat.com> - 0.0.0-2
-- Fix permissions for log files
-* Sun Nov 15 2015 Alon Bar-Lev <alonbl@redhat.com> - 0.0.0-1
-- Initial add.
+* Fri Sep 13 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.17.1-1
+- import netdata 1.17.1 from upstream, adapted to XCP-ng
 
