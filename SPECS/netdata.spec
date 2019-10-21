@@ -85,16 +85,16 @@ fi \
 
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
-Version:	1.17.1
+Version:	1.18.1
 Release:	1%{?dist}
 License:	GPLv3+
 Group:		Applications/System
-Source0:	https://github.com/netdata/%{name}/releases/download/%{version}/%{name}-%{version}.tar.gz
+Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 URL:		http://my-netdata.io
 
 # XCP-ng handling of the Go plugin (we don't want downloads during RPM build!)
 # Update this version manually based on packaging/go.d.version
-%define go_plugin_version 0.8.0
+%define go_plugin_version 0.10.0
 %define go_plugin_basename go.d.plugin-v%{go_plugin_version}.linux-amd64
 Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
 Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/%{go_plugin_basename}.tar.gz
@@ -296,6 +296,14 @@ install -m 4750 -p apps.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.
 install -m 4750 -p perf.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/perf.plugin"
 
 # ###########################################################
+# Install cups.plugin
+# XCP-ng: NO, we don't build it
+
+# ###########################################################
+# Install slabinfo.plugin
+install -m 4750 -p slabinfo.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/slabinfo.plugin"
+
+# ###########################################################
 # Install registry directory
 install -m 755 -d "${RPM_BUILD_ROOT}%{_localstatedir}/lib/%{name}/registry"
 install -m 755 -d "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/custom-plugins.d"
@@ -423,7 +431,15 @@ rm -rf "${RPM_BUILD_ROOT}"
 # Why 4550 instead of 4750?
 %caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
+# slabinfo plugin
+# Why both cap_setuid and the SETUID bit?
+# Why 4550 instead of 4750?
+%caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
+
 %changelog
+* Mon Oct 21 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.18.1-1
+- Update to 1.18.1
+
 * Fri Sep 13 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.17.1-1
 - import netdata 1.17.1 from upstream, adapted to XCP-ng
 
