@@ -1,4 +1,4 @@
-### Adapted from https://github.com/netdata/netdata/blob/v1.17.1/netdata.spec.in
+### XCP-ng: adapted from upstream netdata.spec.in
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 %global contentdir %{_datadir}/netdata
@@ -86,7 +86,7 @@ fi \
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
 Version:	1.18.1
-Release:	1%{?dist}
+Release:	2%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -98,6 +98,7 @@ URL:		http://my-netdata.io
 %define go_plugin_basename go.d.plugin-v%{go_plugin_version}.linux-amd64
 Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
 Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/%{go_plugin_basename}.tar.gz
+Source3:	netdata.conf.headless
 
 # XCP-ng patches
 Patch1000:	netdata-1.16.1-update-netdata-conf.XCP-ng.patch
@@ -248,6 +249,10 @@ queries, API calls, web site visitors, etc.
 so that you can get insights of what is happening now and what just
 happened, on your systems and applications.
 
+On XCP-ng, this package comes with a configuration where the web UI is
+disabled. Install netdata-ui for a ready-to-use netdata with web
+UI.
+
 %prep
 %autosetup -p1 -n %{name}-%{version}
 
@@ -276,7 +281,10 @@ rm -rf "${RPM_BUILD_ROOT}"
 
 find "${RPM_BUILD_ROOT}" -name .keep -delete
 
-install -m 644 -p system/netdata.conf "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}"
+# XCP-ng: configuration file for netdata-ui
+install -m 644 -p system/netdata.conf "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/netdata.conf.ui"
+# XCP-ng: configuration file for netdata-headless
+install -m 644 -p %{SOURCE3} "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/netdata.conf.headless"
 
 # ###########################################################
 # logrotate settings
@@ -348,11 +356,12 @@ getent passwd netdata >/dev/null || \
     -d %{contentdir} -c "netdata" netdata
 
 %post
-%{netdata_init_post}
-# Disable telemetry by default on first install
 if [ $1 -eq 1 ]; then
+    ln -s netdata.conf.headless /etc/netdata/netdata.conf
+    # Disable telemetry by default on first install
     touch /etc/netdata/.opt-out-from-anonymous-statistics
 fi
+%{netdata_init_post}
 
 %preun
 %{netdata_init_preun}
@@ -372,7 +381,7 @@ rm -rf "${RPM_BUILD_ROOT}"
 # must the netdata user have write rights over /etc/netdata/netdata.conf?
 # it didn't in netdata.spec.in but does if installed from netdata-installer.sh
 %dir %{_sysconfdir}/%{name}
-%config(noreplace) %{_sysconfdir}/%{name}/*.conf
+%config(noreplace) %{_sysconfdir}/%{name}/netdata.conf.headless
 %dir %{_sysconfdir}/%{name}/health.d
 %dir %{_sysconfdir}/%{name}/python.d
 %dir %{_sysconfdir}/%{name}/charts.d
@@ -436,7 +445,63 @@ rm -rf "${RPM_BUILD_ROOT}"
 # Why 4550 instead of 4750?
 %caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
 
+
+# XCP-ng: netdata-ui package to enable web UI and open firewall
+%package ui
+Summary: Ready to use netdata for XCP-ng - with web UI enabled
+Requires: netdata
+# let this package's POST run after that from netdata
+# to avoid a race over the /etc/netdata/netdata.conf symlink
+# (and also we need to restart the netdata service)
+Requires(post): netdata
+# Same for POSTUN
+Requires(postun): netdata
+
+%description ui
+Netdata, ready to use on XCP-ng, with web UI enabled.
+
+Installing this package will install netdata with a default
+configuration suitable for XCP-ng.
+
+Warning: this will also open the firewall port 19999 to make
+the readonly web UI available immediately.
+
+%post ui
+if [ $1 == 1 ]; then
+    # initial installation
+    if [ -L /etc/netdata/netdata.conf ]; then
+        rm -f /etc/netdata/netdata.conf
+    fi
+    if [ ! -e /etc/netdata/netdata.conf ]; then
+        ln -s netdata.conf.ui /etc/netdata/netdata.conf
+    fi
+    # TODO: open firewall port
+    # Restart netdata service
+    /usr/bin/systemctl restart netdata.service
+fi
+
+%postun ui
+if [ $1 == 0 ]; then
+    # uninstallation
+    if [ -L /etc/netdata/netdata.conf ]; then
+        rm -f /etc/netdata/netdata.conf
+    fi
+    if [ ! -e /etc/netdata/netdata.conf ]; then
+        ln -s netdata.conf.headless /etc/netdata/netdata.conf
+    fi
+    # TODO: close firewall port
+    # Restart netdata service
+    /usr/bin/systemctl restart netdata.service
+fi
+
+%files ui
+%config(noreplace) /etc/netdata/netdata.conf.ui
+
 %changelog
+* Thu Oct 31 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.18.1-2
+- Create netdata-ui subpackage
+- First release pushed to our repositories
+
 * Mon Oct 21 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.18.1-1
 - Update to 1.18.1
 

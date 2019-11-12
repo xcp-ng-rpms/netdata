@@ -1,0 +1,14 @@
+# netdata configuration, managed by XCP-ng
+# manual changes to this file may be overwritten during future updates
+
+[global]
+    memory mode = none
+    run as user = netdata
+    history = 3600
+    bind to = localhost
+
+[web]
+    mode = none
+    web files owner = root
+    web files group = root
+
