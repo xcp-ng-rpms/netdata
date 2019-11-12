@@ -63,7 +63,6 @@ URL:            http://my-netdata.io
 Source0:        https://github.com/netdata/netdata/releases/download/v%{upver}%{?rcver:-%{rcver}}/%{name}-v%{upver}%{?rcver:-%{rcver}}.tar.gz
 Source1:        netdata.tmpfiles.conf
 Source2:        netdata.init
-Source3:        netdata.conf
 Source4:        netdata.profile
 Source5:        README-packager.md
 Source20:       https://github.com/netdata/go.d.plugin/releases/download/v%{plugin_go_ver}/go.d.plugin-config-v%{plugin_go_ver}.tar.gz
@@ -72,6 +71,11 @@ Source21:       netdata-install-go-plugins.sh
 Source10:       https://github.com/protocolbuffers/protobuf/releases/download/v%{protobuf_cpp_ver}/protobuf-cpp-%{protobuf_cpp_ver}.tar.gz
 # Only for el8
 Source11:       https://github.com/netdata/libjudy/archive/v%{judy_ver}/libjudy-%{judy_ver}.tar.gz
+
+# XCP-ng specific config files
+Source1000:     netdata.conf.headless
+Source1001:     netdata.conf.ui
+
 Patch0:         netdata-fix-shebang-1.41.0.patch
 %if 0%{?fedora}
 # Remove embedded font
@@ -167,6 +171,10 @@ netdata tries to visualize the truth of now, in its greatest detail,
 so that you can get insights of what is happening now and what just
 happened, on your systems and applications.
 
+On XCP-ng, this package comes with a configuration where the web UI is
+disabled. Install netdata-ui for a ready-to-use netdata with web
+UI.
+
 %package data
 BuildArch:      noarch
 Summary:        Data files for netdata
@@ -192,6 +200,61 @@ License:        GPLv3
 
 %description freeipmi
 freeipmi plugin for netdata
+
+# XCP-ng: netdata-ui package to enable web UI and open firewall
+%package ui
+BuildArch: noarch
+Summary:   Ready to use netdata for XCP-ng - with web UI enabled
+Requires:  netdata
+# let this package's POST run after that from netdata
+# to avoid a race over the /etc/netdata/netdata.conf symlink
+# (and also we need to restart the netdata service)
+Requires(post): netdata
+# Same for POSTUN
+Requires(postun): netdata
+
+%description ui
+Netdata, ready to use on XCP-ng, with web UI enabled.
+
+Installing this package will install netdata with a default
+configuration suitable for XCP-ng.
+
+Warning: this will also open the firewall port 19999 to make
+the readonly web UI available immediately.
+
+%post ui
+if [ $1 == 1 ]; then
+    # initial installation
+    if [ -L /etc/netdata/netdata.conf ]; then
+        rm -f /etc/netdata/netdata.conf
+    fi
+    if [ ! -e /etc/netdata/netdata.conf ]; then
+        ln -s netdata.conf.ui /etc/netdata/netdata.conf
+    fi
+    # TODO: open firewall port
+    # Restart netdata service
+    /usr/bin/systemctl restart netdata.service
+fi
+
+%postun ui
+if [ $1 == 0 ]; then
+    # uninstallation
+    if [ -L /etc/netdata/netdata.conf ]; then
+        rm -f /etc/netdata/netdata.conf
+    fi
+    if [ ! -e /etc/netdata/netdata.conf ]; then
+        ln -s netdata.conf.headless /etc/netdata/netdata.conf
+    fi
+    # TODO: close firewall port
+    # Restart netdata service
+    /usr/bin/systemctl restart netdata.service
+fi
+
+%files ui
+# Do replace the netdata.conf.ui even if has local changes.
+# We want to enforce any configuration change that we bring.
+# Users can compare to the .rpmsave files to get their changes back.
+%config %{_sysconfdir}/%{name}/%{name}.conf.ui
 
 %prep
 %setup -qn %{name}-v%{upver}%{?rcver:-%{rcver}}
@@ -300,7 +363,8 @@ mkdir -p %{buildroot}%{_localstatedir}/lib/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/cache/%{name}
 
-install -p -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/%{name}/
+install -p -m 0644 %{SOURCE1000} %{buildroot}%{_sysconfdir}/%{name}/
+install -p -m 0644 %{SOURCE1001} %{buildroot}%{_sysconfdir}/%{name}/
 # it's better to put stock config file in a noarch pkg (like systemd)
 %ifnarch i686
 mkdir -p %{buildroot}%{netdata_conf_stock}/conf.d
@@ -354,10 +418,17 @@ getent passwd netdata > /dev/null || useradd -r -g netdata -c "NetData User" -s 
 if [ $1 -eq 1 ]; then
     # Disable telemetry by default on first install
     touch /etc/netdata/.opt-out-from-anonymous-statistics
+
+    # Make netdata.conf a symlink to the disabled webui config file on first install
+    ln -s netdata.conf.headless /etc/netdata/netdata.conf
 fi
-sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
-sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
-sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
+# If /etc/netdata/netdata.conf is a symlink, then it is the xcp-ng specific version already containing
+# correct values and there's no need to update it
+if [ ! -L /etc/netdata/netdata.conf ]; then
+    sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
+    sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
+    sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
+fi
 %systemd_post %{name}.service
 
 # XCP-ng: always enable and start the service
@@ -370,6 +441,13 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 
 %postun
 %systemd_postun_with_restart %{name}.service
+if [ $1 -eq 0 ]; then
+    if [ -L /etc/netdata/netdata.conf ]; then
+        # remove symlink
+        rm -f /etc/netdata/netdata.conf
+    fi
+    rm -f /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 
 %files
 %doc README.md CHANGELOG.md README-packager.md
@@ -409,7 +487,10 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 %dir %{_sysconfdir}/%{name}/python.d
 %dir %{_sysconfdir}/%{name}/statsd.d
 %dir %{_sysconfdir}/%{name}/go.d
-%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+# Do replace the netdata.conf.headless even if has local changes.
+# We want to enforce any configuration change that we bring.
+# Users can compare to the .rpmsave files to get their changes back.
+%config %{_sysconfdir}/%{name}/%{name}.conf.headless
 %dir %{netdata_conf_stock}/conf.d
 %{netdata_conf_stock}/conf.d/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/netdata
@@ -438,6 +519,7 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - Add Requires for libyaml
 - Enable and start systemd service at install
+- Create netdata-ui subpackage
 
 * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - Update from upstream
