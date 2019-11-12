@@ -63,7 +63,6 @@ URL:            http://my-netdata.io
 Source0:        https://github.com/netdata/netdata/releases/download/v%{upver}%{?rcver:-%{rcver}}/%{name}-v%{upver}%{?rcver:-%{rcver}}.tar.gz
 Source1:        netdata.tmpfiles.conf
 Source2:        netdata.init
-Source3:        netdata.conf
 Source4:        netdata.profile
 Source5:        README-packager.md
 Source20:       https://github.com/netdata/go.d.plugin/releases/download/v%{plugin_go_ver}/go.d.plugin-config-v%{plugin_go_ver}.tar.gz
@@ -72,6 +71,11 @@ Source21:       netdata-install-go-plugins.sh
 Source10:       https://github.com/protocolbuffers/protobuf/releases/download/v%{protobuf_cpp_ver}/protobuf-cpp-%{protobuf_cpp_ver}.tar.gz
 # Only for el8
 Source11:       https://github.com/netdata/libjudy/archive/v%{judy_ver}/libjudy-%{judy_ver}.tar.gz
+
+# XCP-ng specific config files
+Source1000:     netdata.conf.headless
+Source1001:     netdata.conf.ui
+
 Patch0:         netdata-fix-shebang-1.41.0.patch
 %if 0%{?fedora}
 # Remove embedded font
@@ -157,6 +161,9 @@ Requires:       libyaml
 Requires:       %{name}-data = %{version}-%{release}
 Requires:       %{name}-conf = %{version}-%{release}
 
+Requires(post): %{_sbindir}/update-alternatives
+Requires(postun): %{_sbindir}/update-alternatives
+
 %description
 netdata is the fastest way to visualize metrics. It is a resource
 efficient, highly optimized system for collecting and visualizing any
@@ -166,6 +173,10 @@ queries, API calls, web site visitors, etc.
 netdata tries to visualize the truth of now, in its greatest detail,
 so that you can get insights of what is happening now and what just
 happened, on your systems and applications.
+
+On XCP-ng, this package comes with a configuration where the web UI is
+disabled. Install netdata-ui for a ready-to-use netdata with web
+UI.
 
 %package data
 BuildArch:      noarch
@@ -192,6 +203,52 @@ License:        GPLv3
 
 %description freeipmi
 freeipmi plugin for netdata
+
+# XCP-ng: netdata-ui package to enable web UI and open firewall
+%package ui
+BuildArch: noarch
+Summary:   Ready to use netdata for XCP-ng - with web UI enabled
+Requires:  netdata = %{version}-%{release}
+# let this package's POST run after that from netdata
+# to avoid a race over the /etc/netdata/netdata.conf symlink
+# (and also we need to restart the netdata service)
+Requires(post): netdata %{_sbindir}/update-alternatives
+# Same for POSTUN
+Requires(postun): netdata %{_sbindir}/update-alternatives
+
+%description ui
+Netdata, ready to use on XCP-ng, with web UI enabled.
+
+Installing this package will install netdata with a default
+configuration suitable for XCP-ng.
+
+Warning: this will also open the firewall port 19999 to make
+the readonly web UI available immediately.
+
+%post ui
+# Setup netdata.conf symlink to point to the enabled web ui config file.
+# It's executed at package install but also at upgrade if upgraded from a
+# previous that was not using update-alternatives
+%{_sbindir}/update-alternatives --install /etc/netdata/netdata.conf    \
+                                          netdata.conf                 \
+                                          /etc/netdata/netdata.conf.ui \
+                                          10
+if [ $1 == 1 ]; then
+    # TODO: open firewall port
+    # Restart netdata service
+    /usr/bin/systemctl restart netdata.service
+fi
+
+%postun ui
+if [ $1 == 0 ]; then
+    # uninstallation
+    %{_sbindir}/update-alternatives --remove netdata.conf \
+                                             /etc/netdata/netdata.conf.ui
+
+    # TODO: close firewall port
+    # Restart netdata service
+    /usr/bin/systemctl restart netdata.service
+fi
 
 %prep
 %setup -qn %{name}-v%{upver}%{?rcver:-%{rcver}}
@@ -300,7 +357,8 @@ mkdir -p %{buildroot}%{_localstatedir}/lib/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/cache/%{name}
 
-install -p -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/%{name}/
+install -p -m 0644 %{SOURCE1000} %{buildroot}%{_sysconfdir}/%{name}/
+install -p -m 0644 %{SOURCE1001} %{buildroot}%{_sysconfdir}/%{name}/
 # it's better to put stock config file in a noarch pkg (like systemd)
 %ifnarch i686
 mkdir -p %{buildroot}%{netdata_conf_stock}/conf.d
@@ -351,13 +409,26 @@ getent group netdata > /dev/null || groupadd -r netdata
 getent passwd netdata > /dev/null || useradd -r -g netdata -c "NetData User" -s /sbin/nologin -d /var/log/%{name} netdata
 
 %post
+# Setup netdata.conf symlink to point to the disabled web ui config file.
+# Called at install and also upgrade if the package is upgraded from a
+# previous version not using update-alternatves. Anyway, --install will not
+# change the symlink if it already points to another location, i.e at upgrade
+# with netdata-ui installed
+%{_sbindir}/update-alternatives --install /etc/netdata/netdata.conf          \
+                                          netdata.conf                       \
+                                          /etc/netdata/netdata.conf.headless \
+                                          1
 if [ $1 -eq 1 ]; then
     # Disable telemetry by default on first install
     touch /etc/netdata/.opt-out-from-anonymous-statistics
 fi
-sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
-sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
-sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
+# If /etc/netdata/netdata.conf is a symlink, then it is the xcp-ng specific version already containing
+# correct values and there's no need to update it
+if [ ! -L /etc/netdata/netdata.conf ]; then
+    sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
+    sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
+    sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
+fi
 %systemd_post %{name}.service
 echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install-go-plugins.sh script"
@@ -373,6 +444,9 @@ echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install
 %postun
 %systemd_postun_with_restart %{name}.service
 if [ $1 -eq 0 ]; then
+    %{_sbindir}/update-alternatives --remove netdata.conf \
+                                             /etc/netdata/netdata.conf.headless
+
     rm -f /etc/netdata/.opt-out-from-anonymous-statistics
 fi
 
@@ -414,7 +488,11 @@ fi
 %dir %{_sysconfdir}/%{name}/python.d
 %dir %{_sysconfdir}/%{name}/statsd.d
 %dir %{_sysconfdir}/%{name}/go.d
-%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+# Do replace the netdata.conf.headless even if has local changes.
+# We want to enforce any configuration change that we bring.
+# Users can compare to the .rpmsave files to get their changes back.
+%config %{_sysconfdir}/%{name}/%{name}.conf.headless
+%ghost %{_sysconfdir}/%{name}/%{name}.conf
 %dir %{netdata_conf_stock}/conf.d
 %{netdata_conf_stock}/conf.d/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/netdata
@@ -435,6 +513,12 @@ fi
 %license LICENSE REDISTRIBUTED.md
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
+%files ui
+# Do replace the netdata.conf.ui even if has local changes.
+# We want to enforce any configuration change that we bring.
+# Users can compare to the .rpmsave files to get their changes back.
+%config %{_sysconfdir}/%{name}/%{name}.conf.ui
+
 %changelog
 * Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.1
 - Update to netdata v1.44.3
@@ -446,6 +530,7 @@ fi
 - Enable and start systemd service at install
 - Disable telemetry by default
 - Adapt default configuration for XCP-ng
+- Create netdata-ui subpackage
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
