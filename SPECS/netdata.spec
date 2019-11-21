@@ -86,7 +86,7 @@ fi \
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
 Version:	1.18.1
-Release:	2%{?dist}
+Release:	3%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -99,9 +99,13 @@ URL:		http://my-netdata.io
 Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
 Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/%{go_plugin_basename}.tar.gz
 Source3:	netdata.conf.headless
+Source4:	xcpng-iptables-restore.sh
+Source5:	iptables_netdata
+Source6:	ip6tables_netdata
 
 # XCP-ng patches
 Patch1000:	netdata-1.16.1-update-netdata-conf.XCP-ng.patch
+Patch1001:	netdata-1.18.1-firewall-management-in-systemd-unit.XCP-ng.patch
 
 # #####################################################################
 # Core build/install/runtime dependencies
@@ -346,6 +350,14 @@ install_go() {
 }
 install_go
 
+# XCP-ng: install xcpng-iptables-restore.sh
+install -m 755 %{SOURCE4} %{buildroot}%{_libexecdir}/%{name}/xcpng-iptables-restore.sh
+
+# XCP-ng: add iptables_netdata and ip6tables_netdata for netdata-ui
+install -d %{buildroot}%{_sysconfdir}/sysconfig
+install -m 600 %{SOURCE5} %{buildroot}%{_sysconfdir}/sysconfig/iptables_netdata
+install -m 600 %{SOURCE6} %{buildroot}%{_sysconfdir}/sysconfig/ip6tables_netdata
+
 %pre
 
 # User/Group creations, as needed
@@ -504,8 +516,14 @@ fi
 
 %files ui
 %config(noreplace) /etc/netdata/netdata.conf.ui
+%config(noreplace) /etc/sysconfig/iptables_netdata
+%config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
+* Thu Nov 21 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.18.1-3
+- Add firewall management
+- Other packaging and configuration fixes
+
 * Thu Oct 31 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.18.1-2
 - Create netdata-ui subpackage
 - First release pushed to our repositories

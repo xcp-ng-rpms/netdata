@@ -1,0 +1,13 @@
+Index: netdata-1.18.1/system/netdata.service.in
+===================================================================
+--- netdata-1.18.1/system/netdata.service.in
++++ netdata-1.18.1/system/netdata.service.in	2019-11-21 13:09:55.870955365 +0100
+@@ -17,6 +17,8 @@
+ ExecStartPre=/bin/chown -R netdata:netdata @localstatedir_POST@/cache/netdata
+ ExecStartPre=/bin/mkdir -p @localstatedir_POST@/run/netdata
+ ExecStartPre=/bin/chown -R netdata:netdata @localstatedir_POST@/run/netdata
++# XCP-ng: call script that will load /etc/sysconfig/iptables_netdata if it exists
++ExecStartPre=/usr/libexec/netdata/xcpng-iptables-restore.sh
+ #ExecStopPost=/bin/rm @localstatedir_POST@/run/netdata/netdata.pid
+ PermissionsStartOnly=true
+ 
