@@ -368,6 +368,14 @@ fi
 
 %postun
 %{netdata_init_postun}
+# uninstallation
+if [ $1 -eq 0 ]; then
+    if [ -L /etc/netdata/netdata.conf ]; then
+        # remove symlink
+        rm -f /etc/netdata/netdata.conf
+    fi
+    rm -f /etc/netdata/.opt-out-from-anonymous-statistics
+fi
 
 %clean
 rm -rf "${RPM_BUILD_ROOT}"
