@@ -76,6 +76,10 @@ Source20:       go.d.plugin-vendor-%{upver}%{?rcver:-%{rcver}}.tar.gz
 # XCP-ng specific config files
 Source1000:     netdata.conf.headless
 Source1001:     netdata.conf.ui
+# XCP-ng firewall rules management
+Source1002:     xcpng-iptables-restore.sh
+Source1003:     iptables_netdata
+Source1004:     ip6tables_netdata
 
 # Use make-shebang-patch.sh script to build patch
 Patch0:         netdata-fix-shebang-2.1.0.patch
@@ -87,6 +91,7 @@ Patch10:        netdata-remove-fonts-2.0.0.patch
 
 # XCP-ng specific patches
 Patch1000:      netdata-v2.1.0-fix-gcc4-static-struct-init.XCP-ng.patch
+Patch1001:      netdata-v2.1.0-firewall-management-in-systemd-unit.XCP-ng.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -248,7 +253,6 @@ the readonly web UI available immediately.
                                           /etc/netdata/netdata.conf.ui \
                                           10
 if [ $1 == 1 ]; then
-    # TODO: open firewall port
     # Restart netdata service
     /usr/bin/systemctl restart netdata.service
 fi
@@ -259,7 +263,7 @@ if [ $1 == 0 ]; then
     %{_sbindir}/update-alternatives --remove netdata.conf \
                                              /etc/netdata/netdata.conf.ui
 
-    # TODO: close firewall port
+    # The firewall port is not closed but won't be re-opened at next boot
     # Restart netdata service
     /usr/bin/systemctl restart netdata.service
 fi
@@ -278,6 +282,7 @@ if [ -d src/web/gui/v2 ] ; then
     rm -rf src/web/gui/v2 src/web/gui/index.html
 fi
 %patch -P1000 -p1
+%patch -P1001 -p1
 cp %{SOURCE5} .
 
 ### BEGIN go.d.plugin
@@ -373,6 +378,14 @@ install -p -m 0644 %{SOURCE1000} %{buildroot}%{_sysconfdir}/%{name}/
 install -p -m 0644 %{SOURCE1001} %{buildroot}%{_sysconfdir}/%{name}/
 sed -i -e '/^script_dir/s;=.*;="\$\{NETDATA_USER_CONFIG_DIR:-%{_sysconfdir}/netdata\}";' \
     %{buildroot}%{_sysconfdir}/%{name}/edit-config
+
+# XCP-ng: install xcpng-iptables-restore.sh
+install -m 755 %{SOURCE1002} %{buildroot}%{_libexecdir}/%{name}/xcpng-iptables-restore.sh
+
+# XCP-ng: add iptables_netdata and ip6tables_netdata for netdata-ui
+install -d %{buildroot}%{_sysconfdir}/sysconfig
+install -m 600 %{SOURCE1003} %{buildroot}%{_sysconfdir}/sysconfig/iptables_netdata
+install -m 600 %{SOURCE1004} %{buildroot}%{_sysconfdir}/sysconfig/ip6tables_netdata
 
 # Scripts must not be in /etc, /usr/libexec is a better place
 mv %{buildroot}%{_sysconfdir}/%{name}/edit-config %{buildroot}%{_libexecdir}/%{name}/edit-config
@@ -520,6 +533,9 @@ fi
 %attr(0770, netdata, netdata) %dir %{_localstatedir}/cache/%{name}
 %attr(0750, netdata, netdata) %dir %{_localstatedir}/log/%{name}
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+%{_libexecdir}/%{name}/xcpng-iptables-restore.sh
+%config(noreplace) %{_sysconfdir}/sysconfig/iptables_netdata
+%config(noreplace) %{_sysconfdir}/sysconfig/ip6tables_netdata
 
 %files conf
 %doc README.md
@@ -581,6 +597,7 @@ fi
 - Disable telemetry by default
 - Adapt default configuration for XCP-ng
 - Create netdata-ui subpackage
+- Add firewall rules management
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
