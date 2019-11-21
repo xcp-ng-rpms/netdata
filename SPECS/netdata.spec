@@ -75,6 +75,10 @@ Source11:       https://github.com/netdata/libjudy/archive/v%{judy_ver}/libjudy-
 # XCP-ng specific config files
 Source1000:     netdata.conf.headless
 Source1001:     netdata.conf.ui
+# XCP-ng firewall rules management
+Source1002:     xcpng-iptables-restore.sh
+Source1003:     iptables_netdata
+Source1004:     ip6tables_netdata
 
 Patch0:         netdata-fix-shebang-1.41.0.patch
 %if 0%{?fedora}
@@ -84,6 +88,7 @@ Patch10:        netdata-remove-fonts-1.41.0.patch
 
 # XCP-ng specific patches
 Patch1000:      fix-gcc4-static-struct-init.XCP-ng.patch
+Patch1001:      netdata-v1.44.3-firewall-management-in-systemd-unit.XCP-ng.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -234,7 +239,6 @@ the readonly web UI available immediately.
                                           /etc/netdata/netdata.conf.ui \
                                           10
 if [ $1 == 1 ]; then
-    # TODO: open firewall port
     # Restart netdata service
     /usr/bin/systemctl restart netdata.service
 fi
@@ -245,7 +249,7 @@ if [ $1 == 0 ]; then
     %{_sbindir}/update-alternatives --remove netdata.conf \
                                              /etc/netdata/netdata.conf.ui
 
-    # TODO: close firewall port
+    # The firewall port is not closed but won't be re-opened at next boot
     # Restart netdata service
     /usr/bin/systemctl restart netdata.service
 fi
@@ -259,6 +263,7 @@ fi
 rm -rf web/fonts web/gui/dashboard/static/media
 %endif
 %patch1000 -p1
+%patch1001 -p1
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
 %if %{with bundled_protobuf}
@@ -367,6 +372,14 @@ sed -i -e '/NETDATA_STOCK_CONFIG_DIR/ s/lib64/lib/' %{buildroot}%{_sysconfdir}/%
 %endif
 sed -i -e '/^script_dir/s;=.*;="\$\{NETDATA_USER_CONFIG_DIR:-%{_sysconfdir}/netdata\}";' \
     %{buildroot}%{_sysconfdir}/%{name}/edit-config
+
+# XCP-ng: install xcpng-iptables-restore.sh
+install -m 755 %{SOURCE1002} %{buildroot}%{_libexecdir}/%{name}/xcpng-iptables-restore.sh
+
+# XCP-ng: add iptables_netdata and ip6tables_netdata for netdata-ui
+install -d %{buildroot}%{_sysconfdir}/sysconfig
+install -m 600 %{SOURCE1003} %{buildroot}%{_sysconfdir}/sysconfig/iptables_netdata
+install -m 600 %{SOURCE1004} %{buildroot}%{_sysconfdir}/sysconfig/ip6tables_netdata
 
 # Scripts must not be in /etc, /usr/libexec is a better place
 mv %{buildroot}%{_sysconfdir}/%{name}/edit-config %{buildroot}%{_libexecdir}/%{name}/edit-config
@@ -478,6 +491,8 @@ fi
 %attr(0755, netdata, netdata) %dir %{_localstatedir}/log/%{name}
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %attr(0750,root,netdata)%{_sbindir}/netdata-install-go-plugins.sh
+%config(noreplace) /etc/sysconfig/iptables_netdata
+%config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %files conf
 %doc README.md
@@ -531,6 +546,7 @@ fi
 - Disable telemetry by default
 - Adapt default configuration for XCP-ng
 - Create netdata-ui subpackage
+- Add firewall rules management
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
