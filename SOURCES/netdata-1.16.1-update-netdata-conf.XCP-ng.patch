@@ -34,6 +34,6 @@ Index: netdata-1.18.1/system/netdata.conf
 +    web files group = root
 +
 +    default port = 19999
-+    bind to = 0.0.0.0 ::
++    bind to = *
 +    allow netdata.conf from = localhost
 +
