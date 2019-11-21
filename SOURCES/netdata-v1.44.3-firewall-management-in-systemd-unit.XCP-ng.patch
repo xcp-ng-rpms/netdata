@@ -1,0 +1,13 @@
+diff --git a/system/systemd/netdata.service.v235.in b/system/systemd/netdata.service.v235.in
+index 06f03b2..3d52677 100644
+--- a/system/systemd/netdata.service.v235.in
++++ b/system/systemd/netdata.service.v235.in
+@@ -11,6 +11,8 @@ Type=simple
+ User=root
+ EnvironmentFile=-/etc/default/netdata
+ ExecStart=@sbindir_POST@/netdata -D $EXTRA_OPTS
++# XCP-ng: call script that will load /etc/sysconfig/iptables_netdata if it exists
++ExecStartPre=/usr/libexec/netdata/xcpng-iptables-restore.sh
+ 
+ # saving a big db on slow disks may need some time
+ TimeoutStopSec=150
