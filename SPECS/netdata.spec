@@ -85,8 +85,8 @@ fi \
 
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
-Version:	1.18.1
-Release:	3%{?dist}
+Version:	1.19.0
+Release:	1%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -94,7 +94,7 @@ URL:		http://my-netdata.io
 
 # XCP-ng handling of the Go plugin (we don't want downloads during RPM build!)
 # Update this version manually based on packaging/go.d.version
-%define go_plugin_version 0.10.0
+%define go_plugin_version 0.11.0
 %define go_plugin_basename go.d.plugin-v%{go_plugin_version}.linux-amd64
 Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
 Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/%{go_plugin_basename}.tar.gz
@@ -283,7 +283,7 @@ autoreconf -ivf
 rm -rf "${RPM_BUILD_ROOT}"
 %{__make} %{?_smp_mflags} DESTDIR="${RPM_BUILD_ROOT}" install
 
-find "${RPM_BUILD_ROOT}" -name .keep -delete
+find "${RPM_BUILD_ROOT}%{_localstatedir}" -name .keep -delete -print
 
 # XCP-ng: configuration file for netdata-ui
 install -m 644 -p system/netdata.conf "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/netdata.conf.ui"
@@ -318,9 +318,6 @@ install -m 4750 -p slabinfo.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plug
 # ###########################################################
 # Install registry directory
 install -m 755 -d "${RPM_BUILD_ROOT}%{_localstatedir}/lib/%{name}/registry"
-install -m 755 -d "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/custom-plugins.d"
-install -m 755 -d "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/go.d"
-install -m 755 -d "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/ssl"
 
 # ###########################################################
 # Install netdata service
@@ -394,23 +391,9 @@ rm -rf "${RPM_BUILD_ROOT}"
 
 %files
 %doc README.md
-
-%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
-
-# /etc/netdata
-# must the netdata user have write rights over /etc/netdata/netdata.conf?
-# it didn't in netdata.spec.in but does if installed from netdata-installer.sh
-%dir %{_sysconfdir}/%{name}
+%{_sysconfdir}/%{name}
 %config(noreplace) %{_sysconfdir}/%{name}/netdata.conf.headless
-%dir %{_sysconfdir}/%{name}/health.d
-%dir %{_sysconfdir}/%{name}/python.d
-%dir %{_sysconfdir}/%{name}/charts.d
-%dir %{_sysconfdir}/%{name}/custom-plugins.d
-%dir %{_sysconfdir}/%{name}/go.d
-%dir %{_sysconfdir}/%{name}/ssl
-%dir %{_sysconfdir}/%{name}/node.d
-%dir %{_sysconfdir}/%{name}/statsd.d
-%attr(0755,root,root) %{_sysconfdir}/%{name}/edit-config
+%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 
 # systemd service or initscript
 %if %{with systemd}
@@ -473,9 +456,9 @@ Requires: netdata
 # let this package's POST run after that from netdata
 # to avoid a race over the /etc/netdata/netdata.conf symlink
 # (and also we need to restart the netdata service)
-Requires(post): netdata
+Requires(post): netdata = %{version}-%{release}
 # Same for POSTUN
-Requires(postun): netdata
+Requires(postun): netdata = %{version}-%{release}
 
 %description ui
 Netdata, ready to use on XCP-ng, with web UI enabled.
@@ -520,6 +503,10 @@ fi
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
+* Fri Nov 29 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-1
+- Update to 1.19.0
+- Version requires from netdata-ui to netdata
+
 * Thu Nov 21 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.18.1-3
 - Add firewall management
 - Other packaging and configuration fixes
