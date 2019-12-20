@@ -86,7 +86,7 @@ fi \
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
 Version:	1.19.0
-Release:	1%{?dist}
+Release:	2%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -503,6 +503,9 @@ fi
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
+* Fri Dec 20 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-2
+- Rebuild for XCP-ng 8.1
+
 * Fri Nov 29 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-1
 - Update to 1.19.0
 - Version requires from netdata-ui to netdata
