@@ -106,6 +106,8 @@ Source6:	ip6tables_netdata
 # XCP-ng patches
 Patch1000:	netdata-1.16.1-update-netdata-conf.XCP-ng.patch
 Patch1001:	netdata-1.18.1-firewall-management-in-systemd-unit.XCP-ng.patch
+# Fix build with Xen 4.13
+Patch1002:	netdata-1.19.0-remove-tmem-data-collection.XCP-ng.patch
 
 # #####################################################################
 # Core build/install/runtime dependencies
@@ -503,8 +505,9 @@ fi
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
-* Fri Dec 20 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-2
+* Tue Feb 04 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-2
 - Rebuild for XCP-ng 8.1
+- Add netdata-1.19.1-remove-tmem-data-collection.XCP-ng.patch
 
 * Fri Nov 29 2019 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-1
 - Update to 1.19.0
