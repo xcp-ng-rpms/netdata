@@ -2,7 +2,7 @@ Index: netdata-1.18.1/system/netdata.conf
 ===================================================================
 --- netdata-1.18.1/system/netdata.conf
 +++ netdata-1.18.1/system/netdata.conf	2019-10-31 16:55:45.842620639 +0100
-@@ -1,14 +1,9 @@
+@@ -1,14 +1,12 @@
 -# netdata configuration
 +# This is a minimal configuration file for XCP-ng.
 +# You can download a version of this file with ALL possible values, using:
@@ -17,17 +17,26 @@ Index: netdata-1.18.1/system/netdata.conf
 -# The value shown in the commented settings, is the default value.
 +#  wget http://localhost:19999/netdata.conf
  #
-+# Future updates may overwrite the changes made to this file
++# Future updates may overwrite the changes made to this file,
++# and save your local changes to /etc/netdata/netdata.conf.ui.save
++# So if you edit this file, make sure to watch for this file after
++# any update that includes the netdata-ui RPM.
  
  [global]
      run as user = netdata
-@@ -17,8 +12,14 @@
+@@ -17,8 +12,20 @@
      history = 3600
  
      # by default do not expose the netdata port
 +    # avoid changing this value: see the [web] section instead
      bind to = localhost
- 
+
++    # Don't write anything to disk
++    # netdata 1.19.0 has shown that the 256M limit for dbengine was sometimes broken.
++    # It is supposedly fixed in later versions, but we can't risk filling the whole disk with data.
++    # So on XCP-ng, we default to RAM only, which should cover approximately 1h of stats, using 32M of RAM.
++    memory mode = ram
++ 
  [web]
      web files owner = root
 -    web files group = netdata

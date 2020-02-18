@@ -1,5 +1,9 @@
 # netdata configuration, managed by XCP-ng
-# manual changes to this file may be overwritten during future updates
+# DO NOT EDIT!
+# This file is used by netdata in headless mode, when streaming towards Xen Orchestra
+# If you need to edit netdata's configuration:
+# - make sure you installed the netdata-ui package in addition to netdata
+# - edit /etc/netdata/netdata.conf (which will be a symlink to /etc/netdata/netdata.conf.ui)
 
 [global]
     memory mode = none

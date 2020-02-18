@@ -86,7 +86,7 @@ fi \
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
 Version:	1.19.0
-Release:	2%{?dist}
+Release:	3%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -104,7 +104,7 @@ Source5:	iptables_netdata
 Source6:	ip6tables_netdata
 
 # XCP-ng patches
-Patch1000:	netdata-1.16.1-update-netdata-conf.XCP-ng.patch
+Patch1000:	netdata-1.19.0-update-netdata-conf.XCP-ng.patch
 Patch1001:	netdata-1.18.1-firewall-management-in-systemd-unit.XCP-ng.patch
 # Fix build with Xen 4.13
 Patch1002:	netdata-1.19.0-remove-tmem-data-collection.XCP-ng.patch
@@ -247,6 +247,8 @@ Requires: protobuf >= 3
 # #####################################################################
 
 %description
+Description according to the netdata project:
+
   netdata is the fastest way to visualize metrics. It is a resource
 efficient, highly optimized system for collecting and visualizing any
 type of realtime timeseries data, from CPU usage, disk activity, SQL
@@ -394,7 +396,10 @@ rm -rf "${RPM_BUILD_ROOT}"
 %files
 %doc README.md
 %{_sysconfdir}/%{name}
-%config(noreplace) %{_sysconfdir}/%{name}/netdata.conf.headless
+# Do replace the netdata.conf.ui even if has local changes.
+# We want to enforce any configuration change that we bring.
+# Users can compare to the .rpmsave files to get their changes back.
+%config %{_sysconfdir}/%{name}/netdata.conf.headless
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 
 # systemd service or initscript
@@ -500,11 +505,20 @@ if [ $1 == 0 ]; then
 fi
 
 %files ui
-%config(noreplace) /etc/netdata/netdata.conf.ui
+# Do replace the netdata.conf.ui even if has local changes.
+# We want to enforce any configuration change that we bring.
+# Users can compare to the .rpmsave files to get their changes back.
+%config /etc/netdata/netdata.conf.ui
 %config(noreplace) /etc/sysconfig/iptables_netdata
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
+* Tue Feb 18 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-3
+- Security fix: avoid race conditions that can cause the dbengine to grow out of control
+- Set memory mode = ram, no more disk cache
+- See https://github.com/netdata/netdata/issues/8001
+- Enforce installation of our netdata.conf.ui even if there are local changes
+
 * Tue Feb 04 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-2
 - Rebuild for XCP-ng 8.1
 - Add netdata-1.19.1-remove-tmem-data-collection.XCP-ng.patch
