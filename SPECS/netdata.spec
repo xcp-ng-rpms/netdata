@@ -86,7 +86,7 @@ fi \
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
 Version:	1.19.0
-Release:	3%{?dist}
+Release:	4%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -513,6 +513,9 @@ fi
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
+* Tue Jun 30 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-4
+- Rebuild for XCP-ng 8.2
+
 * Tue Feb 18 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-3
 - Security fix: avoid race conditions that can cause the dbengine to grow out of control
 - Set memory mode = ram, no more disk cache
