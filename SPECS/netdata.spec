@@ -110,6 +110,8 @@ Patch1001:	netdata-1.18.1-firewall-management-in-systemd-unit.XCP-ng.patch
 Patch1002:	netdata-1.19.0-remove-tmem-data-collection.XCP-ng.patch
 # Fix log flood
 Patch1003:	netdata-1.19.0-correctly-track-last-num-vcpus-in-xenstat_plugin.backport.patch
+# Fix security vulnerability
+Patch1004:	netdata-1.19.0-fix-critical-vulnerability-in-json-parsing.backport.patch
 
 # #####################################################################
 # Core build/install/runtime dependencies
