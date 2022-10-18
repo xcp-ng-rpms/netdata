@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 %global contentdir %{_datadir}/netdata
-%global version 1.24.0
+
 
 #TODO: Temporary fix for the build-id error during go.d plugin set up
 %global _missing_build_ids_terminate_build 0
@@ -18,9 +18,6 @@
 %define _localstatedir /var
 %define _libexecdir /usr/libexec
 %define _libdir /usr/lib
-
-# Redefine centos_ver to standardize on a single macro
-%{?rhel:%global centos_ver %rhel}
 
 #
 # Conditional build:
@@ -88,20 +85,16 @@ fi \
 
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
-Version:	%{version}
-Release:	1%{?dist}
+Version:	1.19.0
+Release:	5%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 URL:		http://my-netdata.io
 
-# Remove conflicting EPEL packages
-Obsoletes:  %{name}-conf
-Obsoletes:  %{name}-data
-
 # XCP-ng handling of the Go plugin (we don't want downloads during RPM build!)
 # Update this version manually based on packaging/go.d.version
-%define go_plugin_version 0.20.0
+%define go_plugin_version 0.11.0
 %define go_plugin_basename go.d.plugin-v%{go_plugin_version}.linux-amd64
 Source1:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/config.tar.gz
 Source2:	https://github.com/netdata/go.d.plugin/releases/download/v%{go_plugin_version}/%{go_plugin_basename}.tar.gz
@@ -111,8 +104,14 @@ Source5:	iptables_netdata
 Source6:	ip6tables_netdata
 
 # XCP-ng patches
-Patch1000:	netdata-1.24.0-update-netdata-conf.XCP-ng.patch
-Patch1001:	netdata-1.24.0-firewall-management-in-systemd-unit.XCP-ng.patch
+Patch1000:	netdata-1.19.0-update-netdata-conf.XCP-ng.patch
+Patch1001:	netdata-1.18.1-firewall-management-in-systemd-unit.XCP-ng.patch
+# Fix build with Xen 4.13
+Patch1002:	netdata-1.19.0-remove-tmem-data-collection.XCP-ng.patch
+# Fix log flood
+Patch1003:	netdata-1.19.0-correctly-track-last-num-vcpus-in-xenstat_plugin.backport.patch
+# Fix security vulnerability
+Patch1004:	netdata-1.19.0-fix-critical-vulnerability-in-json-parsing.backport.patch
 
 # #####################################################################
 # Core build/install/runtime dependencies
@@ -123,14 +122,13 @@ Patch1001:	netdata-1.24.0-firewall-management-in-systemd-unit.XCP-ng.patch
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: make
-BuildRequires: git-core
+BuildRequires: git
 BuildRequires: autoconf
 %if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?suse_version} >= 1140
 BuildRequires: autoconf-archive
 BuildRequires: autogen
 %endif
 BuildRequires: automake
-BuildRequires: cmake
 BuildRequires: pkgconfig
 BuildRequires: curl
 BuildRequires: findutils
@@ -141,15 +139,14 @@ BuildRequires: openssl-devel
 %if 0%{?suse_version}
 BuildRequires: judy-devel
 BuildRequires: liblz4-devel
-BuildRequires: libjson-c-devel
+BuildRequires: netcat-openbsd
+BuildRequires: json-glib-devel
 %else
 BuildRequires: Judy-devel
 BuildRequires: lz4-devel
+BuildRequires: nc
 BuildRequires: json-c-devel
 %endif
-
-# XCP-ng: apparently missing from upstream spec file
-BuildRequires: elfutils-libelf-devel
 
 # XCP-ng: add buildrequires for Xen support
 BuildRequires: xen-dom0-libs-devel
@@ -166,7 +163,7 @@ Requires:      zlib
 # for libuv, Requires version >= 1
 Requires:      libuv1
 Requires:      libJudy1
-Requires:      libjson-c4
+Requires:      json-glib
 Requires:      libuuid1
 %else
 # for libuv, Requires version >= 1
@@ -218,12 +215,13 @@ Requires: libnetfilter_acct1
 
 # freeipmi plugin dependencies
 BuildRequires:  freeipmi-devel
+Requires: freeipmi
 # end - freeipmi plugin dependencies
 
 # CUPS plugin dependencies
-%if 0%{?centos_ver} != 6 && 0%{?centos_ver} != 7
-BuildRequires: cups-devel >= 1.7
-%endif
+# XCP-ng: CUPS plugin disabled to avoid LOTS of runtime deps.
+# BuildRequires: cups-devel
+# Requires: cups
 # end - cups plugin dependencies
 
 # Prometheus remote write dependencies
@@ -269,9 +267,6 @@ UI.
 
 %prep
 %autosetup -p1 -n %{name}-%{version}
-export CFLAGS="${CFLAGS} -fPIC" && ${RPM_BUILD_DIR}/%{name}-%{version}/packaging/bundle-mosquitto.sh ${RPM_BUILD_DIR}/%{name}-%{version}
-export CFLAGS="${CFLAGS} -fPIC" && ${RPM_BUILD_DIR}/%{name}-%{version}/packaging/bundle-lws.sh ${RPM_BUILD_DIR}/%{name}-%{version}
-export CFLAGS="${CFLAGS} -fPIC" && ${RPM_BUILD_DIR}/%{name}-%{version}/packaging/bundle-libbpf.sh ${RPM_BUILD_DIR}/%{name}-%{version}
 
 %build
 # Conf step
@@ -296,6 +291,8 @@ autoreconf -ivf
 rm -rf "${RPM_BUILD_ROOT}"
 %{__make} %{?_smp_mflags} DESTDIR="${RPM_BUILD_ROOT}" install
 
+find "${RPM_BUILD_ROOT}%{_localstatedir}" -name .keep -delete -print
+
 # XCP-ng: configuration file for netdata-ui
 install -m 644 -p system/netdata.conf "${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/netdata.conf.ui"
 # XCP-ng: configuration file for netdata-headless
@@ -319,23 +316,12 @@ install -m 4750 -p apps.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.
 install -m 4750 -p perf.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/perf.plugin"
 
 # ###########################################################
-# Install ebpf.plugin
-install -m 4750 -p ebpf.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/ebpf.plugin"
-
-# ###########################################################
 # Install cups.plugin
-%if 0%{?centos_ver} != 6 && 0%{?centos_ver} != 7
-install -m 0750 -p cups.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/cups.plugin"
-%endif
+# XCP-ng: NO, we don't build it
 
 # ###########################################################
 # Install slabinfo.plugin
 install -m 4750 -p slabinfo.plugin "${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d/slabinfo.plugin"
-
-# ###########################################################
-# Install cache and log directories
-install -m 755 -d "${RPM_BUILD_ROOT}%{_localstatedir}/cache/%{name}"
-install -m 755 -d "${RPM_BUILD_ROOT}%{_localstatedir}/log/%{name}"
 
 # ###########################################################
 # Install registry directory
@@ -377,9 +363,6 @@ install -d %{buildroot}%{_sysconfdir}/sysconfig
 install -m 600 %{SOURCE5} %{buildroot}%{_sysconfdir}/sysconfig/iptables_netdata
 install -m 600 %{SOURCE6} %{buildroot}%{_sysconfdir}/sysconfig/ip6tables_netdata
 
-${RPM_BUILD_DIR}/%{name}-%{version}/packaging/bundle-dashboard.sh ${RPM_BUILD_DIR}/%{name}-%{version} ${RPM_BUILD_ROOT}%{_datadir}/%{name}/web
-${RPM_BUILD_DIR}/%{name}-%{version}/packaging/bundle-ebpf.sh ${RPM_BUILD_DIR}/%{name}-%{version} ${RPM_BUILD_ROOT}%{_libexecdir}/%{name}/plugins.d
-
 %pre
 
 # User/Group creations, as needed
@@ -390,7 +373,6 @@ getent passwd netdata >/dev/null || \
     -d %{contentdir} -c "netdata" netdata
 
 %post
-# XCP-ng: disable telemetry
 if [ $1 -eq 1 ]; then
     ln -s netdata.conf.headless /etc/netdata/netdata.conf
     # Disable telemetry by default on first install
@@ -403,7 +385,7 @@ fi
 
 %postun
 %{netdata_init_postun}
-# XCP-ng: uninstallation
+# uninstallation
 if [ $1 -eq 0 ]; then
     if [ -L /etc/netdata/netdata.conf ]; then
         # remove symlink
@@ -418,106 +400,65 @@ rm -rf "${RPM_BUILD_ROOT}"
 %files
 %doc README.md
 %{_sysconfdir}/%{name}
-# XCP-ng: Do replace netdata.conf.headless even if has local changes.
+# Do replace the netdata.conf.ui even if has local changes.
 # We want to enforce any configuration change that we bring.
 # Users can compare to the .rpmsave files to get their changes back.
 %config %{_sysconfdir}/%{name}/netdata.conf.headless
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
-%dir %{_datadir}/%{name}
-%{_libdir}/%{name}
-%{_sbindir}/%{name}
-%{_sbindir}/netdatacli
-%{_sbindir}/netdata-claim.sh
 
+# systemd service or initscript
 %if %{with systemd}
 %{_unitdir}/netdata.service
 %else
 %{_sysconfdir}/rc.d/init.d/netdata
 %endif
 
-%defattr(0750,root,netdata,0750)
+%{_libdir}/%{name}
+%{_sbindir}/%{name}
+%{_datadir}/%{name}
 
-%{_libexecdir}/%{name}/python.d
-%{_libexecdir}/%{name}/plugins.d
-%{_libexecdir}/%{name}/node.d
-%{_libexecdir}/%{name}/charts.d
-%{_libexecdir}/%{name}/xcpng-iptables-restore.sh
+%attr(0770,netdata,netdata) %dir %{_localstatedir}/cache/%{name}
+%attr(0755,netdata,root) %dir %{_localstatedir}/log/%{name}
+%attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}
+%attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}/registry
 
-%caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
+# /usr/libexec/netdata
+%defattr(0755,root,root,0755)
+%{_libexecdir}/%{name}
+
+# some plugins deserve a special handling
+# Why 0550 and not 0750?
+%caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0550,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
 
 %if %{with netns}
 # cgroup-network detects the network interfaces of CGROUPs
 # it must be able to use setns() and run cgroup-network-helper.sh as root
 # the helper script reads /proc/PID/fdinfo/* files, runs virsh, etc.
 
-# XCP-ng: Why both cap_setuid and the SETUID bit?
+# Why both cap_setuid and the SETUID bit?
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
-%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
+# Why 0550 instead of 0750?
+%attr(0550,root,root) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
 %endif
 
 # perf plugin
 # Why both cap_setuid and the SETUID bit?
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
 
-# perf plugin
-# Why both cap_setuid and the SETUID bit?
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
-
-# freeipmi files
-# Why both cap_setuid and the SETUID bit?
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
-
 # xenstat plugin
 # TODO: use a lighter capability instead of the all-or-nothing setuid bit?
 %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
 
-# Enforce 0644 for files and 0755 for directories
-# for the netdata web directory
-%defattr(0644,root,netdata,0755)
-%{_datadir}/%{name}/web
+# freeipmi plugin
+# Why both cap_setuid and the SETUID bit?
+# Why 4550 instead of 4750?
+%caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
-# Enforce 0660 for files and 0770 for directories
-# for the netdata lib, cache and log dirs
-%defattr(0660,root,netdata,0770)
-%attr(0770,netdata,netdata) %dir %{_localstatedir}/cache/%{name}
-%attr(0755,netdata,root) %dir %{_localstatedir}/log/%{name}
-%attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}
-%attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}/registry
+# slabinfo plugin
+# Why both cap_setuid and the SETUID bit?
+# Why 4550 instead of 4750?
+%caps(cap_setuid=ep) %attr(4550,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
 
-# Free IPMI belongs to a different sub-package
-%exclude %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
-
-# CUPS belongs to a different sub package
-%if 0%{?centos_ver} != 6 && 0%{?centos_ver} != 7
-%exclude %{_libexecdir}/%{name}/plugins.d/cups.plugin
-
-%package plugin-cups
-Summary: The Common Unix Printing System plugin for netdata
-Group: Applications/System
-Requires: cups >= 1.7
-Requires: netdata = %{version}
-
-%description plugin-cups
- This is the Common Unix Printing System plugin for the netdata daemon.
-Use this plugin to enable metrics collection from cupsd, the daemon running when CUPS is enabled on the system
-
-%files plugin-cups
-%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cups.plugin
-%endif
-
-%package plugin-freeipmi
-Summary: FreeIPMI - The Intelligent Platform Management System
-Group: Applications/System
-Requires: freeipmi
-Requires: netdata = %{version}
-
-%description plugin-freeipmi
- The IPMI specification defines a set of interfaces for platform management.
-It is implemented by a number vendors for system management. The features of IPMI that most users will be interested in 
-are sensor monitoring, system event monitoring, power control, and serial-over-LAN (SOL).
-
-%files plugin-freeipmi
-%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 # XCP-ng: netdata-ui package to enable web UI and open firewall
 %package ui
@@ -568,7 +509,7 @@ if [ $1 == 0 ]; then
 fi
 
 %files ui
-# Do replace netdata.conf.ui even if has local changes.
+# Do replace the netdata.conf.ui even if has local changes.
 # We want to enforce any configuration change that we bring.
 # Users can compare to the .rpmsave files to get their changes back.
 %config /etc/netdata/netdata.conf.ui
@@ -576,9 +517,6 @@ fi
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
-* Fri Sep 11 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.24.0-1
-- Update to 1.24.0
-
 * Thu Jul 16 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-5
 - Fix vulnerability in JSON parsing (buffer overflow)
 - Fix log flood
