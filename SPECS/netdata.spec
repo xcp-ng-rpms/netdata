@@ -82,6 +82,9 @@ Patch0:         netdata-fix-shebang-1.41.0.patch
 Patch10:        netdata-remove-fonts-1.41.0.patch
 %endif
 
+# XCP-ng specific patches
+Patch1000:      fix-gcc4-static-struct-init.XCP-ng.patch
+
 BuildRequires:  zlib-devel
 BuildRequires:  git
 BuildRequires:  autoconf
@@ -200,6 +203,7 @@ freeipmi plugin for netdata
 %patch10 -p1
 rm -rf web/fonts web/gui/dashboard/static/media
 %endif
+%patch1000 -p1
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
 %if %{with bundled_protobuf}
@@ -424,6 +428,7 @@ echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install
 %changelog
 * Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.1
 - Update to netdata v1.44.3
+- Fix build errors with gcc 4.8
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
