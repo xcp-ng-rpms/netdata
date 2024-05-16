@@ -1,5 +1,6 @@
+From 13092c959d15442eb6616a48566cb551223f87ba Mon Sep 17 00:00:00 2001
 From: Thierry Escande <thierry.escande@vates.tech>
-Date: Thu, 16 May 2024 17:58:00 +0200
+Date: Fri, 14 Feb 2025 17:14:21 +0100
 Subject: [PATCH] Fix xcpng build for gcc 4.8
 Content-Type: text/plain; charset = "utf-8"
 Content-Transfert-Encoding: 8bit
@@ -38,12 +39,20 @@ This patch adds the correct typecast in such cases.
 
 Signed-off-by: Thierry Escande <thierry.escande@vates.tech>
 ---
+ src/database/contexts/query_target.c    | 2 +-
+ src/libnetdata/log/log.c                | 8 ++++----
+ src/libnetdata/log/log.h                | 4 ++--
+ src/libnetdata/log/systemd-cat-native.c | 2 +-
+ src/libnetdata/storage-point.h          | 2 +-
+ src/libnetdata/uuid/uuid.h              | 2 +-
+ src/web/api/queries/query.c             | 6 +++---
+ 7 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/database/contexts/query_target.c b/database/contexts/query_target.c
-index 95abc3e..dac84d2 100644
---- a/database/contexts/query_target.c
-+++ b/database/contexts/query_target.c
-@@ -1039,7 +1039,7 @@ QUERY_TARGET *query_target_create(QUERY_TARGET_REQUEST *qtr) {
+diff --git a/src/database/contexts/query_target.c b/src/database/contexts/query_target.c
+index 29a9c3e..5fadbb4 100644
+--- a/src/database/contexts/query_target.c
++++ b/src/database/contexts/query_target.c
+@@ -1052,7 +1052,7 @@ QUERY_TARGET *query_target_create(QUERY_TARGET_REQUEST *qtr) {
          qtr->scope_contexts = qtr->contexts;
  
      memset(&qt->db, 0, sizeof(qt->db));
@@ -52,33 +61,11 @@ index 95abc3e..dac84d2 100644
  
      // copy the request into query_thread_target
      qt->request = *qtr;
-diff --git a/libnetdata/libnetdata.h b/libnetdata/libnetdata.h
-index d2ecfa1..eb0abf3 100644
---- a/libnetdata/libnetdata.h
-+++ b/libnetdata/libnetdata.h
-@@ -417,7 +417,7 @@ typedef struct storage_point {
-     (x).end_time_s = end_s;                             \
-     } while(0)
- 
--#define STORAGE_POINT_UNSET (STORAGE_POINT){ .min = NAN, .max = NAN, .sum = NAN, .count = 0, .anomaly_count = 0, .flags = SN_FLAG_NONE, .start_time_s = 0, .end_time_s = 0 }
-+#define STORAGE_POINT_UNSET { .min = NAN, .max = NAN, .sum = NAN, .count = 0, .anomaly_count = 0, .flags = SN_FLAG_NONE, .start_time_s = 0, .end_time_s = 0 }
- 
- #define storage_point_is_unset(x) (!(x).count)
- #define storage_point_is_gap(x) (!netdata_double_isnumber((x).sum))
-@@ -676,7 +676,7 @@ static inline BITMAPX *bitmapX_create(uint32_t bits) {
- #endif // 64bit version of bitmaps
- 
- #define BITMAPX_INITIALIZER(wanted_bits) { .bits = (wanted_bits), .data = {0} }
--#define BITMAP256_INITIALIZER (BITMAP256)BITMAPX_INITIALIZER(256)
-+#define BITMAP256_INITIALIZER BITMAPX_INITIALIZER(256)
- #define BITMAP1024_INITIALIZER (BITMAP1024)BITMAPX_INITIALIZER(1024)
- #define bitmap256_get_bit(ptr, idx) bitmapX_get_bit((BITMAPX *)ptr, idx)
- #define bitmap256_set_bit(ptr, idx, value) bitmapX_set_bit((BITMAPX *)ptr, idx, value)
-diff --git a/libnetdata/log/log.c b/libnetdata/log/log.c
-index c805716..315c5e5 100644
---- a/libnetdata/log/log.c
-+++ b/libnetdata/log/log.c
-@@ -350,8 +350,8 @@ struct nd_log_limit {
+diff --git a/src/libnetdata/log/log.c b/src/libnetdata/log/log.c
+index a31127c..a0f5798 100644
+--- a/src/libnetdata/log/log.c
++++ b/src/libnetdata/log/log.c
+@@ -363,8 +363,8 @@ struct nd_log_limit {
      uint32_t logs_per_period_backup;
  };
  
@@ -89,7 +76,7 @@ index c805716..315c5e5 100644
  
  struct nd_log_source {
      SPINLOCK spinlock;
-@@ -558,12 +558,12 @@ void nd_log_set_user_settings(ND_LOG_SOURCES source, const char *setting) {
+@@ -572,12 +572,12 @@ void nd_log_set_user_settings(ND_LOG_SOURCES source, const char *setting) {
                  ls->min_priority = nd_log_priority2id(value);
              else if(strcmp(name, "protection") == 0 && value && *value) {
                  if(strcmp(value, "off") == 0 || strcmp(value, "none") == 0) {
@@ -104,11 +91,11 @@ index c805716..315c5e5 100644
  
                      char *slash = strchr(value, '/');
                      if(slash) {
-diff --git a/libnetdata/log/log.h b/libnetdata/log/log.h
-index ad63469..e56b63b 100644
---- a/libnetdata/log/log.h
-+++ b/libnetdata/log/log.h
-@@ -175,14 +175,14 @@ struct log_stack_entry {
+diff --git a/src/libnetdata/log/log.h b/src/libnetdata/log/log.h
+index 015c02e..a050ec0 100644
+--- a/src/libnetdata/log/log.h
++++ b/src/libnetdata/log/log.h
+@@ -188,14 +188,14 @@ struct log_stack_entry {
  #define ND_LOG_STACK_PUSH(lgs) log_stack_push(lgs)
  
  #define ND_LOG_FIELD_TXT(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_TXT, .txt = (value), .set = true, }
@@ -125,10 +112,10 @@ index ad63469..e56b63b 100644
  
  void log_stack_pop(void *ptr);
  void log_stack_push(struct log_stack_entry *lgs);
-diff --git a/libnetdata/log/systemd-cat-native.c b/libnetdata/log/systemd-cat-native.c
-index de6211c..eb68351 100644
---- a/libnetdata/log/systemd-cat-native.c
-+++ b/libnetdata/log/systemd-cat-native.c
+diff --git a/src/libnetdata/log/systemd-cat-native.c b/src/libnetdata/log/systemd-cat-native.c
+index 74d3728..ab5642b 100644
+--- a/src/libnetdata/log/systemd-cat-native.c
++++ b/src/libnetdata/log/systemd-cat-native.c
 @@ -564,7 +564,7 @@ static void lgs_reset(struct log_stack_entry *lgs) {
      }
  
@@ -138,11 +125,37 @@ index de6211c..eb68351 100644
  }
  
  static const char *strdupz_replacing_newlines(const char *src, const char *newline) {
-diff --git a/web/api/queries/query.c b/web/api/queries/query.c
-index 76d673c..08fc7c5 100644
---- a/web/api/queries/query.c
-+++ b/web/api/queries/query.c
-@@ -1573,8 +1573,8 @@ static void rrd2rrdr_query_execute(RRDR *r, size_t dim_id_in_rrdr, QUERY_ENGINE_
+diff --git a/src/libnetdata/storage-point.h b/src/libnetdata/storage-point.h
+index 53e7506..a111517 100644
+--- a/src/libnetdata/storage-point.h
++++ b/src/libnetdata/storage-point.h
+@@ -38,7 +38,7 @@ typedef struct storage_point {
+     (x).end_time_s = end_s;                             \
+     } while(0)
+ 
+-#define STORAGE_POINT_UNSET (STORAGE_POINT){ .min = NAN, .max = NAN, .sum = NAN, .count = 0, .anomaly_count = 0, .flags = SN_FLAG_NONE, .start_time_s = 0, .end_time_s = 0 }
++#define STORAGE_POINT_UNSET { .min = NAN, .max = NAN, .sum = NAN, .count = 0, .anomaly_count = 0, .flags = SN_FLAG_NONE, .start_time_s = 0, .end_time_s = 0 }
+ 
+ #define storage_point_is_unset(x) (!(x).count)
+ #define storage_point_is_gap(x) (!netdata_double_isnumber((x).sum))
+diff --git a/src/libnetdata/uuid/uuid.h b/src/libnetdata/uuid/uuid.h
+index cde4576..4a947ad 100644
+--- a/src/libnetdata/uuid/uuid.h
++++ b/src/libnetdata/uuid/uuid.h
+@@ -25,7 +25,7 @@ typedef struct _uuid {
+ 	static const nd_uuid_t name = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
+ #endif
+ 
+-static const ND_UUID UUID_ZERO = (ND_UUID){ { .parts = { .hig64 = 0, .low64 = 0 } }};
++static const ND_UUID UUID_ZERO = { { .parts = { .hig64 = 0, .low64 = 0 } }};
+ ND_UUID_DEFINE(streaming_from_child_msgid, 0xed,0x4c,0xdb, 0x8f, 0x1b, 0xeb, 0x4a, 0xd3, 0xb5, 0x7c, 0xb3, 0xca, 0xe2, 0xd1, 0x62, 0xfa);
+ ND_UUID_DEFINE(streaming_to_parent_msgid, 0x6e, 0x2e, 0x38, 0x39, 0x06, 0x76, 0x48, 0x96, 0x8b, 0x64, 0x60, 0x45, 0xdb, 0xf2, 0x8d, 0x66);
+ ND_UUID_DEFINE(health_alert_transition_msgid, 0x9c, 0xe0, 0xcb, 0x58, 0xab, 0x8b, 0x44, 0xdf, 0x82, 0xc4, 0xbf, 0x1a, 0xd9, 0xee, 0x22, 0xde);
+diff --git a/src/web/api/queries/query.c b/src/web/api/queries/query.c
+index 6854300..88e54a3 100644
+--- a/src/web/api/queries/query.c
++++ b/src/web/api/queries/query.c
+@@ -1584,8 +1584,8 @@ static void rrd2rrdr_query_execute(RRDR *r, size_t dim_id_in_rrdr, QUERY_ENGINE_
  
      const RRDR_TIME_GROUPING add_flush = r->time_grouping.add_flush;
  
@@ -153,7 +166,7 @@ index 76d673c..08fc7c5 100644
  
      RRDR_OPTIONS options = qt->window.options;
      size_t points_wanted = qt->window.points;
-@@ -1914,7 +1914,7 @@ static void rrd2rrdr_query_execute(RRDR *r, size_t dim_id_in_rrdr, QUERY_ENGINE_
+@@ -1925,7 +1925,7 @@ static void rrd2rrdr_query_execute(RRDR *r, size_t dim_id_in_rrdr, QUERY_ENGINE_
              ops->group_points_added = 0;
              ops->group_value_flags = RRDR_VALUE_NOTHING;
              ops->group_points_non_zero = 0;
@@ -162,3 +175,6 @@ index 76d673c..08fc7c5 100644
  
              now_end_time += ops->view_update_every;
          } while(now_end_time <= stop_time && points_added < points_wanted);
+-- 
+2.47.2
+

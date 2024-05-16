@@ -104,7 +104,7 @@ Patch10:        netdata-remove-fonts-1.46.0.patch
 %endif
 
 # XCP-ng specific patches
-Patch1000:      fix-gcc4-static-struct-init.XCP-ng.patch
+Patch1000:      netdata-v1.47.5-Fix-xcpng-build-for-gcc-4.8.patch
 Patch1001:      netdata-v1.44.3-firewall-management-in-systemd-unit.XCP-ng.patch
 Patch1002:      netdata-v1.44.3-handle-systemd-unit-stop.XCP-ng.patch
 
@@ -632,6 +632,7 @@ fi
 %changelog
 * Wed Feb 19 2025 Thierry Escande <thierry.escande@vates.tech> - 1.47.5-4.1
 - Update to Netdata v1.47.5
+- Rework patch for gcc 4.8 build errors
 - *** Upstream changelog ***
 - * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
 - - Update from upstream
