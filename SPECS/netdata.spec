@@ -59,7 +59,7 @@ ExcludeArch: s390x
 
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
-Release:        1%{?dist}
+Release:        1.1%{?dist}
 Summary:        Real-time performance monitoring
 # For a breakdown of the licensing, see license REDISTRIBUTED.md
 License:        GPL-3.0-only
@@ -81,6 +81,9 @@ Patch0:         netdata-fix-shebang-1.41.0.patch
 # Remove embedded font
 Patch10:        netdata-remove-fonts-1.41.0.patch
 %endif
+
+# XCP-ng specific patches
+Patch1000:      fix-gcc4-static-struct-init.XCP-ng.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -200,6 +203,7 @@ freeipmi plugin for netdata
 %patch10 -p1
 rm -rf web/fonts web/gui/dashboard/static/media
 %endif
+%patch1000 -p1
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
 %if %{with bundled_protobuf}
@@ -420,6 +424,9 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 %changelog
+* Fri May 24 2024 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.1
+- Fix build errors with gcc 4.8
+
 * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - Update from upstream
 
