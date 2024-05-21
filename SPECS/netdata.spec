@@ -89,7 +89,6 @@ BuildRequires:  automake
 BuildRequires:  pkgconfig
 BuildRequires:  libuuid-devel
 BuildRequires:  freeipmi-devel
-BuildRequires:  httpd
 BuildRequires:  gcc
 BuildRequires:  libuv-devel
 %if %{with bundled_judy}
@@ -104,7 +103,6 @@ BuildRequires:  make
 BuildRequires:  libcurl-devel
 BuildRequires:  systemd
 BuildRequires:  openssl-devel
-BuildRequires:  libpfm-devel
 BuildRequires:  libyaml-devel
 ### TODO Remove condition when autogen become available in el9
 %if 0%{?rhel} && 0%{?rhel} == 9
@@ -143,7 +141,6 @@ BuildRequires:  python2
 %endif
 
 
-Requires:       nodejs
 Requires:       curl
 Requires:       nc
 Requires:       snappy
@@ -155,6 +152,7 @@ Requires:       protobuf
 Requires:       glyphicons-halflings-fonts
 %endif
 Requires:       logrotate
+Requires:       libyaml
 
 Requires:       %{name}-data = %{version}-%{release}
 Requires:       %{name}-conf = %{version}-%{release}
@@ -428,6 +426,8 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 - Fix build errors with gcc 4.8
 - Force use of protobuf system packages from XCP-ng repositories
 - Add conditions for protobuf Requires
+- Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
+- Add Requires for libyaml
 
 * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - Update from upstream
