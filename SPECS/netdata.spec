@@ -19,12 +19,8 @@ ExcludeArch: s390x
 %bcond_without log2journal
 %endif
 
-# Because protobuf is too old in el7
-%if 0%{?rhel} && 0%{?rhel} == 7
-%bcond_without bundled_protobuf
-%else
+# Defaults to protobuf packages from XCP-ng repositories
 %bcond_with bundled_protobuf
-%endif
 
 # Because judy-devel is not available in el8 for more than 1 year
 %if 0%{?rhel} && 0%{?rhel} == 8
@@ -118,8 +114,10 @@ BuildRequires:  autogen
 
 # Prometheus
 BuildRequires:  snappy-devel
+%if %{without bundled_protobuf}
 BuildRequires:  protobuf-devel
 BuildRequires:  protobuf-c-devel
+%endif
 BuildRequires:  findutils
 
 # Cloud client
@@ -149,8 +147,10 @@ Requires:       nodejs
 Requires:       curl
 Requires:       nc
 Requires:       snappy
+%if %{without bundled_protobuf}
 Requires:       protobuf-c
 Requires:       protobuf
+%endif
 %if 0%{?fedora}
 Requires:       glyphicons-halflings-fonts
 %endif
@@ -429,6 +429,8 @@ echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install
 * Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.1
 - Update to netdata v1.44.3
 - Fix build errors with gcc 4.8
+- Force use of protobuf system packages from XCP-ng repositories
+- Add conditions for protobuf Requires
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
