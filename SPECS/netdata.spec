@@ -357,6 +357,11 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 %tmpfiles_create %{name}.conf
 echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 
+# XCP-ng: always enable and start the service
+/usr/bin/systemctl enable %{name}.service ||:
+/usr/bin/systemctl daemon-reload ||:
+/usr/bin/systemctl restart %{name}.service ||:
+
 %preun
 %systemd_preun %{name}.service
 
@@ -482,6 +487,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - Disable cups log2journal and exporter_mongodb
 - Use netdata.service file for systemd < 235
+- Enable and start systemd service at install, restart at upgrade
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
