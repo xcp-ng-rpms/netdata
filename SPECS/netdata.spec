@@ -358,6 +358,11 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install-go-plugins.sh script"
 
+# XCP-ng: always enable and start the service
+/usr/bin/systemctl enable %{name}.service ||:
+/usr/bin/systemctl daemon-reload ||:
+/usr/bin/systemctl restart %{name}.service ||:
+
 %preun
 %systemd_preun %{name}.service
 
@@ -431,6 +436,7 @@ echo "Netdata go plugin can be easily installed with %{_sbindir}/netdata-install
 - Add conditions for protobuf Requires
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - Add Requires for libyaml
+- Enable and start systemd service at install
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
