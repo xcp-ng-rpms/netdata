@@ -356,6 +356,11 @@ sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.
 sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
 %systemd_post %{name}.service
 
+# XCP-ng: always enable and start the service
+/usr/bin/systemctl enable %{name}.service ||:
+/usr/bin/systemctl daemon-reload ||:
+/usr/bin/systemctl restart %{name}.service ||:
+
 %preun
 %systemd_preun %{name}.service
 
@@ -428,6 +433,7 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 - Add conditions for protobuf Requires
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - Add Requires for libyaml
+- Enable and start systemd service at install
 
 * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - Update from upstream
