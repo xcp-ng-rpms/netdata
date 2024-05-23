@@ -445,6 +445,7 @@ fi
 - Add Requires for libyaml
 - Enable and start systemd service at install
 - Disable telemetry by default
+- Adapt default configuration for XCP-ng
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
