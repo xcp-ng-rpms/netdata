@@ -119,6 +119,10 @@ BuildRequires:  libyaml-devel
 BuildRequires:  autogen
 %endif
 
+# For xenstat plugin
+BuildRequires:  xen-dom0-libs-devel
+BuildRequires:  yajl-devel
+
 # Prometheus
 BuildRequires:  snappy-devel
 %if %{without bundled_protobuf}
@@ -327,6 +331,7 @@ cp -a externaldeps/libJudy/libjudy-%{judy_ver}/src/Judy.h externaldeps/libJudy/
 autoreconf -ivf
 %configure \
     --enable-plugin-freeipmi \
+    --enable-plugin-xenstat \
 %if %{with netfilteracct}
     --enable-plugin-nfacct \
 %endif
@@ -480,6 +485,7 @@ fi
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
+%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
 %if %{with cups}
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cups.plugin
 %endif
