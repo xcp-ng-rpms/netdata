@@ -496,6 +496,7 @@ fi
 - Use netdata.service file for systemd < 235
 - Enable and start systemd service at install, restart at upgrade
 - Disable telemetry by default
+- Adapt default configuration for XCP-ng
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
