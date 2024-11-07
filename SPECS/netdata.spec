@@ -89,6 +89,7 @@ Patch10:        netdata-remove-fonts-1.41.0.patch
 # XCP-ng specific patches
 Patch1000:      fix-gcc4-static-struct-init.XCP-ng.patch
 Patch1001:      netdata-v1.44.3-firewall-management-in-systemd-unit.XCP-ng.patch
+Patch1002:      netdata-v1.44.3-handle-systemd-unit-stop.XCP-ng.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -268,6 +269,7 @@ rm -rf web/fonts web/gui/dashboard/static/media
 %endif
 %patch1000 -p1
 %patch1001 -p1
+%patch1002 -p1
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
 %if %{with bundled_protobuf}
@@ -554,6 +556,7 @@ fi
 - Create netdata-ui subpackage
 - Add firewall rules management
 - Enable xenstat plugin
+- Handle service ExecStop to avoid service to hang when removing packages
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
