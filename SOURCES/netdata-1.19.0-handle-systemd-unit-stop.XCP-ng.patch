@@ -1,0 +1,15 @@
+diff --git a/system/netdata.service.in b/system/netdata.service.in
+index 611ee90..ade1c87 100644
+--- a/system/netdata.service.in
++++ b/system/netdata.service.in
+@@ -21,6 +21,10 @@ ExecStartPre=/bin/chown -R netdata:netdata @localstatedir_POST@/run/netdata
+ ExecStartPre=/usr/libexec/netdata/xcpng-iptables-restore.sh
+ #ExecStopPost=/bin/rm @localstatedir_POST@/run/netdata/netdata.pid
+ PermissionsStartOnly=true
++# XCP-ng: Add a delay before stopping netdata to avoid the service to hang and
++# be in a failed state if stop is called too soon after a start.
++ExecStop=/usr/bin/sleep 3
++ExecStop=/usr/bin/kill --signal SIGTERM $MAINPID
+ 
+ # saving a big db on slow disks may need some time
+ TimeoutStopSec=60
