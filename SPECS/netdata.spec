@@ -92,6 +92,7 @@ Patch10:        netdata-remove-fonts-2.0.0.patch
 # XCP-ng specific patches
 Patch1000:      netdata-v2.1.0-fix-gcc4-static-struct-init.XCP-ng.patch
 Patch1001:      netdata-v2.1.0-firewall-management-in-systemd-unit.XCP-ng.patch
+Patch1002:      netdata-v2.1.0-handle-systemd-unit-stop.XCP-ng.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -287,6 +288,7 @@ if [ -d src/web/gui/v2 ] ; then
 fi
 %patch -P1000 -p1
 %patch -P1001 -p1
+%patch -P1002 -p1
 cp %{SOURCE5} .
 
 ### BEGIN go.d.plugin
@@ -603,6 +605,7 @@ fi
 - Create netdata-ui subpackage
 - Add firewall rules management
 - Enable xenstat plugin
+- Handle service ExecStop to avoid service to hang when removing packages
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40

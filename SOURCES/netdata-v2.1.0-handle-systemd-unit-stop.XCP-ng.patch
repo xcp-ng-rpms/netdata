@@ -1,0 +1,15 @@
+diff --git a/system/systemd/netdata.service.v235.in b/system/systemd/netdata.service.v235.in
+index 3d52677..055406d 100644
+--- a/system/systemd/netdata.service.v235.in
++++ b/system/systemd/netdata.service.v235.in
+@@ -13,6 +13,10 @@ EnvironmentFile=-/etc/default/netdata
+ ExecStart=@sbindir_POST@/netdata -D $EXTRA_OPTS
+ # XCP-ng: call script that will load /etc/sysconfig/iptables_netdata if it exists
+ ExecStartPre=/usr/libexec/netdata/xcpng-iptables-restore.sh
++# XCP-ng: Add a delay before stopping netdata to avoid the service to hang and
++# be in a failed state if stop is called too soon after a start.
++ExecStop=/usr/bin/sleep 3
++ExecStop=/usr/bin/kill --signal SIGTERM $MAINPID
+ 
+ # saving a big db on slow disks may need some time
+ TimeoutStopSec=150
