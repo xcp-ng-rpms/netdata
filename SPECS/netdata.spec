@@ -86,7 +86,7 @@ fi \
 Summary:	Real-time performance monitoring, done right!
 Name:		netdata
 Version:	1.19.0
-Release:	5%{?dist}
+Release:	6%{?dist}
 License:	GPLv3+
 Group:		Applications/System
 Source0:	https://github.com/netdata/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -112,6 +112,8 @@ Patch1002:	netdata-1.19.0-remove-tmem-data-collection.XCP-ng.patch
 Patch1003:	netdata-1.19.0-correctly-track-last-num-vcpus-in-xenstat_plugin.backport.patch
 # Fix security vulnerability
 Patch1004:	netdata-1.19.0-fix-critical-vulnerability-in-json-parsing.backport.patch
+# Fix start/stop netdata service
+Patch1005:  netdata-1.19.0-handle-systemd-unit-stop.XCP-ng.patch
 
 # #####################################################################
 # Core build/install/runtime dependencies
@@ -517,6 +519,9 @@ fi
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
 
 %changelog
+* Fri Nov 08 2024 Thierry Escande <thierry.escande@vates.tech> - 1.19.0-6
+- Handle service ExecStop to avoid service to hang when removing packages
+
 * Thu Jul 16 2020 Samuel Verschelde <stormi-xcp@ylix.fr> - 1.19.0-5
 - Fix vulnerability in JSON parsing (buffer overflow)
 - Fix log flood
