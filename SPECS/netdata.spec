@@ -80,6 +80,10 @@ Patch1:         netdata-remove-web-v2.patch
 # Remove embedded font
 Patch10:        netdata-remove-fonts-2.0.0.patch
 %endif
+
+# XCP-ng specific patches
+Patch1000:      netdata-v2.1.0-fix-gcc4-static-struct-init.XCP-ng.patch
+
 BuildRequires:  zlib-devel
 BuildRequires:  git
 BuildRequires:  cmake
@@ -222,6 +226,7 @@ rm -rf src/web/gui/v1/fonts/
 if [ -d src/web/gui/v2 ] ; then
     rm -rf src/web/gui/v2 src/web/gui/index.html
 fi
+%patch -P1000 -p1
 cp %{SOURCE5} .
 
 ### BEGIN go.d.plugin
@@ -480,6 +485,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 %changelog
 * Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 2.1.0-3.1
 - Update to netdata v2.1.0
+- Fix build errors with gcc 4.8
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40

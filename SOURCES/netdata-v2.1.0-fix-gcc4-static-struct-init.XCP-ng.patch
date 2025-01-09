@@ -1,0 +1,213 @@
+From f0e425ddacb12bff8823df37b20b39a61ba08909 Mon Sep 17 00:00:00 2001
+From: Thierry Escande <thierry.escande@vates.tech>
+Date: Wed, 8 Jan 2025 17:30:37 +0100
+Subject: [PATCH] Fix xcpng build for gcc 4.8
+Content-Type: text/plain; charset = "utf-8"
+Content-Transfert-Encoding: 8bit
+
+This patch fixes compiler errors "initializer element is not constant"
+in global static structures initialization.
+
+The defines for default struct fields are defined as:
+
+ #define DEFAULT_FOO (struct foo){.bar = 1, ...}
+
+And then used in global static structure declarations as:
+
+ static struct {
+     int a;
+     int b;
+     struct foo f;
+     ....;
+ } toz = {
+     .a = 1,
+     .b = 2,
+     .f = DEFAULT_FOO,
+     ....,
+ }
+
+Our gcc 4.8 doesn't like the type cast in DEFAULT_FOO definition,
+leading to the compilation error. So this patch removes the typecast in
+the default values definition.
+
+But then, in-code assignation fails for lack of typecast:
+
+ struct foo f = DEFAULT_FOO;
+
+Generating the error "expected expression before '{' token".
+This patch adds the correct typecast in such cases.
+
+Signed-off-by: Thierry Escande <thierry.escande@vates.tech>
+---
+ src/database/contexts/query_target.c         | 2 +-
+ src/libnetdata/config/appconfig.h            | 2 +-
+ src/libnetdata/local-sockets/local-sockets.h | 2 +-
+ src/libnetdata/log/nd_log-config.c           | 4 ++--
+ src/libnetdata/log/nd_log.h                  | 4 ++--
+ src/libnetdata/log/nd_log_limit.h            | 4 ++--
+ src/libnetdata/log/systemd-cat-native.c      | 2 +-
+ src/libnetdata/storage-point.h               | 2 +-
+ src/libnetdata/uuid/uuid.h                   | 2 +-
+ src/web/api/queries/query.c                  | 6 +++---
+ 10 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/src/database/contexts/query_target.c b/src/database/contexts/query_target.c
+index 3161554..034dfcd 100644
+--- a/src/database/contexts/query_target.c
++++ b/src/database/contexts/query_target.c
+@@ -1052,7 +1052,7 @@ QUERY_TARGET *query_target_create(QUERY_TARGET_REQUEST *qtr) {
+         qtr->scope_contexts = qtr->contexts;
+ 
+     memset(&qt->db, 0, sizeof(qt->db));
+-    qt->query_points = STORAGE_POINT_UNSET;
++    qt->query_points = (STORAGE_POINT)STORAGE_POINT_UNSET;
+ 
+     // copy the request into query_thread_target
+     qt->request = *qtr;
+diff --git a/src/libnetdata/config/appconfig.h b/src/libnetdata/config/appconfig.h
+index 766dfee..38c7f39 100644
+--- a/src/libnetdata/config/appconfig.h
++++ b/src/libnetdata/config/appconfig.h
+@@ -120,7 +120,7 @@ struct config {
+     avl_tree_lock index;
+ };
+ 
+-#define APPCONFIG_INITIALIZER (struct config) {         \
++#define APPCONFIG_INITIALIZER {         \
+         .sections = NULL,                               \
+         .spinlock = SPINLOCK_INITIALIZER,       \
+         .index = {                                      \
+diff --git a/src/libnetdata/local-sockets/local-sockets.h b/src/libnetdata/local-sockets/local-sockets.h
+index 63e651f..4960e82 100644
+--- a/src/libnetdata/local-sockets/local-sockets.h
++++ b/src/libnetdata/local-sockets/local-sockets.h
+@@ -1389,7 +1389,7 @@ struct local_sockets_child_work {
+     uint64_t net_ns_inode;
+ };
+ 
+-#define LOCAL_SOCKET_TERMINATOR (struct local_socket) { \
++#define LOCAL_SOCKET_TERMINATOR { \
+     .expires = UINT32_MAX,                              \
+     .timer = UINT8_MAX,                                 \
+     .inode = UINT64_MAX,                                \
+diff --git a/src/libnetdata/log/nd_log-config.c b/src/libnetdata/log/nd_log-config.c
+index c8e1740..f52e4a5 100644
+--- a/src/libnetdata/log/nd_log-config.c
++++ b/src/libnetdata/log/nd_log-config.c
+@@ -49,12 +49,12 @@ void nd_log_set_user_settings(ND_LOG_SOURCES source, const char *setting) {
+                 ls->min_priority = nd_log_priority2id(value);
+             else if(strcmp(name, "protection") == 0 && value && *value) {
+                 if(strcmp(value, "off") == 0 || strcmp(value, "none") == 0) {
+-                    ls->limits = ND_LOG_LIMITS_UNLIMITED;
++                    ls->limits = (struct nd_log_limit)ND_LOG_LIMITS_UNLIMITED;
+                     ls->limits.counter = 0;
+                     ls->limits.prevented = 0;
+                 }
+                 else {
+-                    ls->limits = ND_LOG_LIMITS_DEFAULT;
++                    ls->limits = (struct nd_log_limit)ND_LOG_LIMITS_DEFAULT;
+ 
+                     char *slash = strchr(value, '/');
+                     if(slash) {
+diff --git a/src/libnetdata/log/nd_log.h b/src/libnetdata/log/nd_log.h
+index a892a38..bcb4399 100644
+--- a/src/libnetdata/log/nd_log.h
++++ b/src/libnetdata/log/nd_log.h
+@@ -58,14 +58,14 @@ struct log_stack_entry {
+ #define ND_LOG_STACK_PUSH(lgs) log_stack_push(lgs)
+ 
+ #define ND_LOG_FIELD_TXT(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_TXT, .txt = (value), .set = true, }
+-#define ND_LOG_FIELD_STR(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_STR, .str = (value), .set = true, }
++#define ND_LOG_FIELD_STR(field, value) { .id = (field), .type = NDFT_STR, .str = (value), .set = true, }
+ #define ND_LOG_FIELD_BFR(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_BFR, .bfr = (value), .set = true, }
+ #define ND_LOG_FIELD_U64(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_U64, .u64 = (value), .set = true, }
+ #define ND_LOG_FIELD_I64(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_I64, .i64 = (value), .set = true, }
+ #define ND_LOG_FIELD_DBL(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_DBL, .dbl = (value), .set = true, }
+ #define ND_LOG_FIELD_CB(field, func, data) (struct log_stack_entry){ .id = (field), .type = NDFT_CALLBACK, .cb = { .formatter = (func), .formatter_data = (data) }, .set = true, }
+ #define ND_LOG_FIELD_UUID(field, value) (struct log_stack_entry){ .id = (field), .type = NDFT_UUID, .uuid = (value), .set = true, }
+-#define ND_LOG_FIELD_END() (struct log_stack_entry){ .id = NDF_STOP, .type = NDFT_UNSET, .set = false, }
++#define ND_LOG_FIELD_END() { .id = NDF_STOP, .type = NDFT_UNSET, .set = false, }
+ 
+ void log_stack_pop(void *ptr);
+ void log_stack_push(struct log_stack_entry *lgs);
+diff --git a/src/libnetdata/log/nd_log_limit.h b/src/libnetdata/log/nd_log_limit.h
+index 5486abd..93d6c26 100644
+--- a/src/libnetdata/log/nd_log_limit.h
++++ b/src/libnetdata/log/nd_log_limit.h
+@@ -18,8 +18,8 @@ struct nd_log_limit {
+     uint32_t logs_per_period_backup;
+ };
+ 
+-#define ND_LOG_LIMITS_DEFAULT (struct nd_log_limit){ .logs_per_period = ND_LOG_DEFAULT_THROTTLE_LOGS, .logs_per_period_backup = ND_LOG_DEFAULT_THROTTLE_LOGS, .throttle_period = ND_LOG_DEFAULT_THROTTLE_PERIOD, }
+-#define ND_LOG_LIMITS_UNLIMITED (struct nd_log_limit){  .logs_per_period = 0, .logs_per_period_backup = 0, .throttle_period = 0, }
++#define ND_LOG_LIMITS_DEFAULT { .logs_per_period = ND_LOG_DEFAULT_THROTTLE_LOGS, .logs_per_period_backup = ND_LOG_DEFAULT_THROTTLE_LOGS, .throttle_period = ND_LOG_DEFAULT_THROTTLE_PERIOD, }
++#define ND_LOG_LIMITS_UNLIMITED {  .logs_per_period = 0, .logs_per_period_backup = 0, .throttle_period = 0, }
+ 
+ #include "nd_log-internals.h"
+ 
+diff --git a/src/libnetdata/log/systemd-cat-native.c b/src/libnetdata/log/systemd-cat-native.c
+index 2e4f55e..619e08a 100644
+--- a/src/libnetdata/log/systemd-cat-native.c
++++ b/src/libnetdata/log/systemd-cat-native.c
+@@ -568,7 +568,7 @@ static void lgs_reset(struct log_stack_entry *lgs) {
+     }
+ 
+     lgs[0] = ND_LOG_FIELD_TXT(NDF_MESSAGE, NULL);
+-    lgs[_NDF_MAX] = ND_LOG_FIELD_END();
++    lgs[_NDF_MAX] = (struct log_stack_entry)ND_LOG_FIELD_END();
+ }
+ 
+ static const char *strdupz_replacing_newlines(const char *src, const char *newline) {
+diff --git a/src/libnetdata/storage-point.h b/src/libnetdata/storage-point.h
+index 53e7506..a111517 100644
+--- a/src/libnetdata/storage-point.h
++++ b/src/libnetdata/storage-point.h
+@@ -38,7 +38,7 @@ typedef struct storage_point {
+     (x).end_time_s = end_s;                             \
+     } while(0)
+ 
+-#define STORAGE_POINT_UNSET (STORAGE_POINT){ .min = NAN, .max = NAN, .sum = NAN, .count = 0, .anomaly_count = 0, .flags = SN_FLAG_NONE, .start_time_s = 0, .end_time_s = 0 }
++#define STORAGE_POINT_UNSET { .min = NAN, .max = NAN, .sum = NAN, .count = 0, .anomaly_count = 0, .flags = SN_FLAG_NONE, .start_time_s = 0, .end_time_s = 0 }
+ 
+ #define storage_point_is_unset(x) (!(x).count)
+ #define storage_point_is_gap(x) (!netdata_double_isnumber((x).sum))
+diff --git a/src/libnetdata/uuid/uuid.h b/src/libnetdata/uuid/uuid.h
+index 5fb1bce..08fa89f 100644
+--- a/src/libnetdata/uuid/uuid.h
++++ b/src/libnetdata/uuid/uuid.h
+@@ -25,7 +25,7 @@ typedef struct _uuid {
+ 	static const nd_uuid_t name = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
+ #endif
+ 
+-static const ND_UUID UUID_ZERO = (ND_UUID){ { .parts = { .hig64 = 0, .low64 = 0 } }};
++static const ND_UUID UUID_ZERO = { { .parts = { .hig64 = 0, .low64 = 0 } }};
+ ND_UUID_DEFINE(streaming_from_child_msgid, 0xed,0x4c,0xdb, 0x8f, 0x1b, 0xeb, 0x4a, 0xd3, 0xb5, 0x7c, 0xb3, 0xca, 0xe2, 0xd1, 0x62, 0xfa);
+ ND_UUID_DEFINE(streaming_to_parent_msgid, 0x6e, 0x2e, 0x38, 0x39, 0x06, 0x76, 0x48, 0x96, 0x8b, 0x64, 0x60, 0x45, 0xdb, 0xf2, 0x8d, 0x66);
+ ND_UUID_DEFINE(health_alert_transition_msgid, 0x9c, 0xe0, 0xcb, 0x58, 0xab, 0x8b, 0x44, 0xdf, 0x82, 0xc4, 0xbf, 0x1a, 0xd9, 0xee, 0x22, 0xde);
+diff --git a/src/web/api/queries/query.c b/src/web/api/queries/query.c
+index 1f7f620..5644237 100644
+--- a/src/web/api/queries/query.c
++++ b/src/web/api/queries/query.c
+@@ -1584,8 +1584,8 @@ static void rrd2rrdr_query_execute(RRDR *r, size_t dim_id_in_rrdr, QUERY_ENGINE_
+ 
+     const RRDR_TIME_GROUPING add_flush = r->time_grouping.add_flush;
+ 
+-    ops->group_point = STORAGE_POINT_UNSET;
+-    ops->query_point = STORAGE_POINT_UNSET;
++    ops->group_point = (STORAGE_POINT)STORAGE_POINT_UNSET;
++    ops->query_point = (STORAGE_POINT)STORAGE_POINT_UNSET;
+ 
+     RRDR_OPTIONS options = qt->window.options;
+     size_t points_wanted = qt->window.points;
+@@ -1925,7 +1925,7 @@ static void rrd2rrdr_query_execute(RRDR *r, size_t dim_id_in_rrdr, QUERY_ENGINE_
+             ops->group_points_added = 0;
+             ops->group_value_flags = RRDR_VALUE_NOTHING;
+             ops->group_points_non_zero = 0;
+-            ops->group_point = STORAGE_POINT_UNSET;
++            ops->group_point = (STORAGE_POINT)STORAGE_POINT_UNSET;
+ 
+             now_end_time += ops->view_update_every;
+         } while(now_end_time <= stop_time && points_added < points_wanted);
+-- 
+2.45.2
+
