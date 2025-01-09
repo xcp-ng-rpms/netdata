@@ -27,7 +27,7 @@ ExcludeArch: s390x
 %bcond_with xenstat
 %endif
 %else
-%bcond_with xenstat
+%bcond_without xenstat
 %endif
 
 %bcond_without ml
@@ -156,6 +156,10 @@ BuildRequires:  libmnl-devel
 BuildRequires:  python3
 %global __python = /usr/bin/python3
 
+
+# For xenstat plugin
+BuildRequires:  xen-dom0-libs-devel
+BuildRequires:  yajl-devel
 
 Requires:       curl
 Requires:       nc
@@ -598,6 +602,7 @@ fi
 - Adapt default configuration for XCP-ng
 - Create netdata-ui subpackage
 - Add firewall rules management
+- Enable xenstat plugin
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
