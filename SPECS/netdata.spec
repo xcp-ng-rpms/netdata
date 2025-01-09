@@ -3,8 +3,8 @@
 ExcludeArch: s390x
 %endif
 
-%bcond_without cups
-%bcond_without log2journal
+%bcond_with cups
+%bcond_with log2journal
 
 %if 0%{?rhel}
 %bcond_with netfilteracct
@@ -31,7 +31,7 @@ ExcludeArch: s390x
 %endif
 
 %bcond_without ml
-%bcond_without exporter_mongodb
+%bcond_with exporter_mongodb
 %bcond_with ebpf
 %if 0%{?fedora} && 0%{?fedora} >= 41
 %bcond_without plugin_go
@@ -480,6 +480,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 - Force use of python3 needed by install step
 - Remove _vpath_builddir redefinition needed by cmake
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
+- Disable cups log2journal and exporter_mongodb
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
