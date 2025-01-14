@@ -1,0 +1,14 @@
+diff -rup a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2024-11-07 21:09:18.124650569 +0100
++++ b/CMakeLists.txt	2024-11-08 14:05:04.445421671 +0100
+@@ -3211,8 +3211,8 @@ endif()
+ #
+ 
+ if(ENABLE_DASHBOARD)
+-  include(NetdataDashboard)
+-  bundle_dashboard()
++  # include(NetdataDashboard)
++  # bundle_dashboard()
+ 
+   include(src/web/gui/v1/dashboard_v1.cmake)
+   include(src/web/gui/gui.cmake)
