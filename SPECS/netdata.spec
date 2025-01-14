@@ -145,12 +145,9 @@ BuildRequires:  cups-devel >= 1.7
 BuildRequires:  libnetfilter_acct-devel
 BuildRequires:  libmnl-devel
 %endif
-# Only Fedora or el8+
-%if 0%{?fedora} || 0%{?rhel} >= 8
+# Default to python 3 as a yaml python module doesn't byte-compile with python 2
 BuildRequires:  python3
-%else
-BuildRequires:  python2
-%endif
+%global __python = /usr/bin/python3
 
 
 Requires:       nodejs
@@ -486,6 +483,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 * Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 2.1.0-3.1
 - Update to netdata v2.1.0
 - Fix build errors with gcc 4.8
+- Force use of python3 needed by install step
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
