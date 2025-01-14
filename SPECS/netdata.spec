@@ -304,7 +304,7 @@ find %{buildroot} -name '.keep' -delete
 mkdir -p %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{_tmpfilesdir}
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d
-install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service %{buildroot}%{_unitdir}/%{name}.service
+install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service.v235 %{buildroot}%{_unitdir}/%{name}.service
 install -p -m 0644 %{SOURCE1} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 install -Dp -m 0644 %{_vpath_builddir}/system/logrotate/netdata %{buildroot}%{_sysconfdir}/logrotate.d/netdata
 
@@ -481,6 +481,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 - Remove _vpath_builddir redefinition needed by cmake
 - Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - Disable cups log2journal and exporter_mongodb
+- Use netdata.service file for systemd < 235
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
