@@ -91,7 +91,6 @@ BuildRequires:  gcc-c++
 BuildRequires:  pkgconfig
 BuildRequires:  libuuid-devel
 BuildRequires:  freeipmi-devel
-BuildRequires:  httpd
 BuildRequires:  gcc
 BuildRequires:  libuv-devel
 %if %{with bundled_judy}
@@ -105,7 +104,6 @@ BuildRequires:  libmnl-devel
 BuildRequires:  make
 BuildRequires:  libcurl-devel
 BuildRequires:  openssl-devel
-BuildRequires:  libpfm-devel
 BuildRequires:  libyaml-devel
 BuildRequires:  ninja-build
 %if %{with plugin_go}
@@ -150,7 +148,6 @@ BuildRequires:  python3
 %global __python = /usr/bin/python3
 
 
-Requires:       nodejs
 Requires:       curl
 Requires:       nc
 Requires:       snappy
@@ -482,6 +479,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 - Fix build errors with gcc 4.8
 - Force use of python3 needed by install step
 - Remove _vpath_builddir redefinition needed by cmake
+- Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
