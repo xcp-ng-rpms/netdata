@@ -421,9 +421,6 @@ find %{buildroot} -name '.keep' -delete
 mkdir -p %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{_tmpfilesdir}
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d
-%if 0%{?rhel} && 0%{?rhel} <= 8
-%global _vpath_builddir .
-%endif
 install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service %{buildroot}%{_unitdir}/%{name}.service
 install -p -m 0644 %{SOURCE1} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 install -Dp -m 0644 %{_vpath_builddir}/system/logrotate/netdata %{buildroot}%{_sysconfdir}/logrotate.d/netdata
@@ -633,6 +630,7 @@ fi
 * Wed Feb 19 2025 Thierry Escande <thierry.escande@vates.tech> - 1.47.5-4.1
 - Update to Netdata v1.47.5
 - Rework patch for gcc 4.8 build errors
+- Remove _vpath_builddir redefinition needed by cmake
 - *** Upstream changelog ***
 - * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
 - - Update from upstream
