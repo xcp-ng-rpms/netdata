@@ -307,9 +307,6 @@ find %{buildroot} -name '.keep' -delete
 mkdir -p %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{_tmpfilesdir}
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d
-%if 0%{?rhel} && 0%{?rhel} <= 8
-%global _vpath_builddir .
-%endif
 install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service %{buildroot}%{_unitdir}/%{name}.service
 install -p -m 0644 %{SOURCE1} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 install -Dp -m 0644 %{_vpath_builddir}/system/logrotate/netdata %{buildroot}%{_sysconfdir}/logrotate.d/netdata
@@ -484,6 +481,7 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 - Update to netdata v2.1.0
 - Fix build errors with gcc 4.8
 - Force use of python3 needed by install step
+- Remove _vpath_builddir redefinition needed by cmake
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
