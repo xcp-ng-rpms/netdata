@@ -484,11 +484,11 @@ fi
 %{_unitdir}/%{name}.service
 %{_tmpfilesdir}/%{name}.conf
 %caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
 %if %{with cups}
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cups.plugin
 %endif
@@ -534,7 +534,7 @@ fi
 %files freeipmi
 %doc README.md
 %license LICENSE REDISTRIBUTED.md
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 %files ui
 # Do replace the netdata.conf.ui even if has local changes.
@@ -557,6 +557,7 @@ fi
 - Add firewall rules management
 - Enable xenstat plugin
 - Handle service ExecStop to avoid service to hang when removing packages
+- Remove cap_setuid=pe for plugin files that have the setuid bit set
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
