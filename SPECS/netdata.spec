@@ -493,10 +493,10 @@ fi
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/system-info.sh
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/tc-qos-helper.sh
 
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
 
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/local-listeners
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/local-listeners
 
 %caps(cap_sys_admin,cap_sys_ptrace,cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/network-viewer.plugin
 
@@ -514,13 +514,13 @@ fi
 %if 0%{?rhel} >= 9 || 0%{?fedora} >= 36
 %caps(cap_perfmon=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
 %else
-%caps(cap_setuid=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
 %endif
 %caps(cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
 %caps(cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/systemd-journal.plugin
 %caps(cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/debugfs.plugin
 %if %{with xenstat}
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
 %endif
 
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/python.d.plugin
@@ -574,14 +574,14 @@ fi
 %files freeipmi
 %doc README.md
 %license LICENSE REDISTRIBUTED.md
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 %if %{with plugin_go}
 %files go.d.plugin
 %doc README.md
 %license LICENSE REDISTRIBUTED.md
 %caps(cap_dac_read_search,cap_net_admin,cap_net_raw=eip) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/go.d.plugin
-%caps(cap_setuid=ep)%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/ndsudo
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/ndsudo
 %endif
 
 %files ui
@@ -606,6 +606,7 @@ fi
 - Add firewall rules management
 - Enable xenstat plugin
 - Handle service ExecStop to avoid service to hang when removing packages
+- Remove cap_setuid=pe for plugin files that have the setuid bit set
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
