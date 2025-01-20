@@ -10,8 +10,8 @@
 # or
 #  curl -o /etc/netdata/netdata.conf http://localhost:19999/netdata.conf
 #
-# You can uncomment and change any of the options below.
-# The value shown in the commented settings, is the default value.
+# Changes made to this file will be overwritten by future updates. You can
+# compare to the .rpmsave file to get changes back.
 #
 
 [global]

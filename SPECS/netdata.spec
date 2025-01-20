@@ -607,6 +607,7 @@ fi
 - Enable xenstat plugin
 - Handle service ExecStop to avoid service to hang when removing packages
 - Remove cap_setuid=pe for plugin files that have the setuid bit set
+- Add comment about config files overwritten by updates
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
