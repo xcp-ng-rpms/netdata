@@ -56,7 +56,7 @@ ExcludeArch: s390x
 
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
-Release:        3%{?dist}
+Release:        3.1%{?dist}
 Summary:        Real-time performance monitoring
 # For a breakdown of the licensing, see license REDISTRIBUTED.md
 License:        GPL-3.0-or-later
@@ -478,94 +478,83 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 
 
 %changelog
-* Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
-- go-module cannot be built in fc40
+* Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 2.1.0-3.1
+- Update to netdata v2.1.0
+- *** Upstream changelog ***
+- * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
+- - go-module cannot be built in fc40
+- * Thu Dec 19 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-2
+- - Update from upstream
+- * Mon Nov 25 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.3-2
+- - Fix /usr/share/netdata/web/index.html not found
+- * Sat Nov 23 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.3-1
+- - Update from upstream
+- * Fri Nov 15 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.1-1
+- - Update from upstream
+- * Sat Nov 09 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.0-1
+- - Update from upstream
+- - Remove completely EOL EL7 support
+- * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
+- - Update from upstream
+- * Thu Oct 10 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.4-1
+- - Update from upstream
+- * Wed Oct 02 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.3-1
+- - Update from upstream
+- * Thu Sep 26 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.2-1
+- - Update from upstream
+- * Tue Sep 10 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.1-1
+- - Update from upstream
+- * Fri Aug 23 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.0-1
+- - Update from upstream
+- * Thu Aug 22 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-5
+- - Fix journald access
+-   See https://bugzilla.redhat.com/show_bug.cgi?id=2298058
+- * Thu Aug 15 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-4
+- - Remove closed source parts from binary rpms
+-   See https://bugzilla.redhat.com/show_bug.cgi?id=2304167
+- * Wed Aug 07 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-3
+- - Change BuildRequires from pkgconfig(libxenlight) and pkgconfig(libxenstat) to xen-devel package
+- - Enable go plugin only for Fedora 40+
+- * Mon Jul 29 2024 Miroslav Suchý <msuchy@redhat.com> - 1.46.3-2
+- - convert license to SPDX
+- * Fri Jul 26 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-1
+- - Update from upstream
+- * Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.46.2-2
+- - Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+- * Mon Jul 15 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.2-1
+- - Update from upstream
+- * Fri Jun 21 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.1-1
+- - Update from upstream
+- - Disable go plugin for all builds
+- * Wed Jun 19 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.0-1
+- - Update from upstream
+- * Thu Jun 06 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.6-1
+- - Update from upstream
+- * Thu May 23 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.5-1
+- - Update from upstream
+- * Thu May 09 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.4-1
+- - Update from upstream
+- * Sat Apr 13 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.3-1
+- - Update from upstream
+- * Fri Apr 05 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.2-1
+- - Update from upstream
+- * Wed Mar 27 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.1-1
+- - Update from upstream
+- * Thu Mar 21 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.0-1
+- - Update from upstream
 
-* Thu Dec 19 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-2
-- Update from upstream
+* Fri Nov 08 2024 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.2
+- Handle service ExecStop to avoid service to hang when removing packages
 
-* Mon Nov 25 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.3-2
-- Fix /usr/share/netdata/web/index.html not found
-
-* Sat Nov 23 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.3-1
-- Update from upstream
-
-* Fri Nov 15 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.1-1
-- Update from upstream
-
-* Sat Nov 09 2024 Didier Fabert <didier.fabert@gmail.com> 2.0.0-1
-- Update from upstream
-- Remove completely EOL EL7 support
-
-* Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
-- Update from upstream
-
-* Thu Oct 10 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.4-1
-- Update from upstream
-
-* Wed Oct 02 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.3-1
-- Update from upstream
-
-* Thu Sep 26 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.2-1
-- Update from upstream
-
-* Tue Sep 10 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.1-1
-- Update from upstream
-
-* Fri Aug 23 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.0-1
-- Update from upstream
-
-* Thu Aug 22 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-5
-- Fix journald access
-  See https://bugzilla.redhat.com/show_bug.cgi?id=2298058
-  
-* Thu Aug 15 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-4
-- Remove closed source parts from binary rpms
-  See https://bugzilla.redhat.com/show_bug.cgi?id=2304167
-
-* Wed Aug 07 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-3
-- Change BuildRequires from pkgconfig(libxenlight) and pkgconfig(libxenstat) to xen-devel package
-- Enable go plugin only for Fedora 40+
-
-* Mon Jul 29 2024 Miroslav Suchý <msuchy@redhat.com> - 1.46.3-2
-- convert license to SPDX
-
-* Fri Jul 26 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-1
-- Update from upstream
-
-* Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.46.2-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
-
-* Mon Jul 15 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.2-1
-- Update from upstream
-
-* Fri Jun 21 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.1-1
-- Update from upstream
-- Disable go plugin for all builds
-
-* Wed Jun 19 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.0-1
-- Update from upstream
-
-* Thu Jun 06 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.6-1
-- Update from upstream
-
-* Thu May 23 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.5-1
-- Update from upstream
-
-* Thu May 09 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.4-1
-- Update from upstream
-
-* Sat Apr 13 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.3-1
-- Update from upstream
-
-* Fri Apr 05 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.2-1
-- Update from upstream
-
-* Wed Mar 27 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.1-1
-- Update from upstream
-
-* Thu Mar 21 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.0-1
-- Update from upstream
+* Fri May 24 2024 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.1
+- Fix build errors with gcc 4.8
+- Force use of protobuf system packages from XCP-ng repositories
+- Add conditions for protobuf Requires
+- Remove unneeded Requires for nodejs and BuildRequires for httpd and libpfm-devel
+- Add Requires for libyaml
+- Enable and start systemd service at install
+- Create netdata-ui subpackage
+- Add firewall rules management
 
 * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - Update from upstream
