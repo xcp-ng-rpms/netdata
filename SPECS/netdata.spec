@@ -558,6 +558,7 @@ fi
 - Enable xenstat plugin
 - Handle service ExecStop to avoid service to hang when removing packages
 - Remove cap_setuid=pe for plugin files that have the setuid bit set
+- Add comment about config files overwritten by updates
 - *** Upstream changelog ***
 - * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - - Update from upstream
