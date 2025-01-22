@@ -54,6 +54,9 @@ ExcludeArch: s390x
 
 %global netdata_conf_stock %{_prefix}/lib/%{name}
 
+# XCP-ng only
+%global jsonc_version   0.17-20230812
+
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
 Release:        3.1%{?dist}
@@ -80,6 +83,7 @@ Source1001:     netdata.conf.ui
 Source1002:     xcpng-iptables-restore.sh
 Source1003:     iptables_netdata
 Source1004:     ip6tables_netdata
+Source1005:     json-c-%{jsonc_version}.tar.gz
 
 # Use make-shebang-patch.sh script to build patch
 Patch0:         netdata-fix-shebang-2.1.0.patch
@@ -93,6 +97,7 @@ Patch10:        netdata-remove-fonts-2.0.0.patch
 Patch1000:      netdata-v2.1.0-fix-gcc4-static-struct-init.XCP-ng.patch
 Patch1001:      netdata-v2.1.0-firewall-management-in-systemd-unit.XCP-ng.patch
 Patch1002:      netdata-v2.1.0-handle-systemd-unit-stop.XCP-ng.patch
+Patch1003:      netdata-v2.1.0-Use-local-json-c-sources.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -129,7 +134,8 @@ BuildRequires:  protobuf-c-devel
 BuildRequires:  findutils
 
 # Cloud client
-BuildRequires:  json-c-devel
+# XCP-ng: commented out to make sure we use the bundled version
+# BuildRequires:  json-c-devel
 BuildRequires:  libcap-devel
 
 # For tests
@@ -289,6 +295,7 @@ fi
 %patch -P1000 -p1
 %patch -P1001 -p1
 %patch -P1002 -p1
+%patch -P1003 -p1
 cp %{SOURCE5} .
 
 ### BEGIN go.d.plugin
@@ -299,6 +306,9 @@ popd
 %endif
 ### END go.d.plugin
 
+pushd %{_builddir}
+tar xfa %{SOURCE1005}
+popd
 
 %build
 %cmake -G Ninja \
@@ -360,7 +370,8 @@ popd
     -DENABLE_PLUGIN_SYSTEMD_JOURNAL=On \
     -DENABLE_PLUGIN_LOGS_MANAGEMENT=On \
     -DENABLE_EXPORTER_PROMETHEUS_REMOTE_WRITE=On \
-    -DENABLE_BUNDLED_JSONC=Off \
+    -DENABLE_BUNDLED_JSONC=On \
+    -DJSONC_SOURCES_PATH=%{_builddir}/json-c-%{jsonc_version} \
     -DENABLE_BUNDLED_YAML=Off
 
 %{cmake_build}
@@ -608,6 +619,7 @@ fi
 - Handle service ExecStop to avoid service to hang when removing packages
 - Remove cap_setuid=pe for plugin files that have the setuid bit set
 - Add comment about config files overwritten by updates
+- Use a local json-c tarball v0.17
 - *** Upstream changelog ***
 - * Sat Dec 21 2024 Didier Fabert <didier.fabert@gmail.com> 2.1.0-3
 - - go-module cannot be built in fc40
