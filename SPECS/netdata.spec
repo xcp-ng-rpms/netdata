@@ -195,6 +195,9 @@ Requires:       libyaml
 Requires:       %{name}-data = %{version}-%{release}
 Requires:       %{name}-conf = %{version}-%{release}
 
+Requires(post): %{_sbindir}/update-alternatives
+Requires(postun): %{_sbindir}/update-alternatives
+
 %description
 netdata is the fastest way to visualize metrics. It is a resource
 efficient, highly optimized system for collecting and visualizing any
@@ -253,9 +256,9 @@ Requires:  netdata
 # let this package's POST run after that from netdata
 # to avoid a race over the /etc/netdata/netdata.conf symlink
 # (and also we need to restart the netdata service)
-Requires(post): netdata
+Requires(post): netdata %{_sbindir}/update-alternatives
 # Same for POSTUN
-Requires(postun): netdata
+Requires(postun): netdata %{_sbindir}/update-alternatives
 
 %description ui
 Netdata, ready to use on XCP-ng, with web UI enabled.
@@ -267,14 +270,14 @@ Warning: this will also open the firewall port 19999 to make
 the readonly web UI available immediately.
 
 %post ui
+# Setup netdata.conf symlink to point to the enabled web ui config file.
+# It's executed at package install but also at upgrade if upgraded from a
+# previous that was not using update-alternatives
+%{_sbindir}/update-alternatives --install /etc/netdata/netdata.conf    \
+                                          netdata.conf                 \
+                                          /etc/netdata/netdata.conf.ui \
+                                          10
 if [ $1 == 1 ]; then
-    # initial installation
-    if [ -L /etc/netdata/netdata.conf ]; then
-        rm -f /etc/netdata/netdata.conf
-    fi
-    if [ ! -e /etc/netdata/netdata.conf ]; then
-        ln -s netdata.conf.ui /etc/netdata/netdata.conf
-    fi
     # Restart netdata service
     /usr/bin/systemctl restart netdata.service
 fi
@@ -282,12 +285,9 @@ fi
 %postun ui
 if [ $1 == 0 ]; then
     # uninstallation
-    if [ -L /etc/netdata/netdata.conf ]; then
-        rm -f /etc/netdata/netdata.conf
-    fi
-    if [ ! -e /etc/netdata/netdata.conf ]; then
-        ln -s netdata.conf.headless /etc/netdata/netdata.conf
-    fi
+    %{_sbindir}/update-alternatives --remove netdata.conf \
+                                             /etc/netdata/netdata.conf.ui
+
     # The firewall port is not closed but won't be re-opened at next boot
     # Restart netdata service
     /usr/bin/systemctl restart netdata.service
@@ -474,12 +474,18 @@ getent group netdata > /dev/null || groupadd -r netdata
 getent passwd netdata > /dev/null || useradd -r -g netdata -G systemd-journal -c "NetData User" -s /sbin/nologin -d /var/log/%{name} netdata
 
 %post
+# Setup netdata.conf symlink to point to the disabled web ui config file.
+# Called at install and also upgrade if the package is upgraded from a
+# previous version not using update-alternatves. Anyway, --install will not
+# change the symlink if it already points to another location, i.e at upgrade
+# with netdata-ui installed
+%{_sbindir}/update-alternatives --install /etc/netdata/netdata.conf          \
+                                          netdata.conf                       \
+                                          /etc/netdata/netdata.conf.headless \
+                                          1
 if [ $1 -eq 1 ]; then
     # Disable telemetry by default on first install
     touch /etc/netdata/.opt-out-from-anonymous-statistics
-
-    # Make netdata.conf a symlink to the disabled webui config file on first install
-    ln -s netdata.conf.headless /etc/netdata/netdata.conf
 fi
 # If /etc/netdata/netdata.conf is a symlink, then it is the xcp-ng specific version already containing
 # correct values and there's no need to update it
@@ -503,10 +509,9 @@ echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 %postun
 %systemd_postun_with_restart %{name}.service
 if [ $1 -eq 0 ]; then
-    if [ -L /etc/netdata/netdata.conf ]; then
-        # remove symlink
-        rm -f /etc/netdata/netdata.conf
-    fi
+    %{_sbindir}/update-alternatives --remove netdata.conf \
+                                             /etc/netdata/netdata.conf.headless
+
     rm -f /etc/netdata/.opt-out-from-anonymous-statistics
 fi
 
@@ -598,6 +603,7 @@ fi
 # We want to enforce any configuration change that we bring.
 # Users can compare to the .rpmsave files to get their changes back.
 %config %{_sysconfdir}/%{name}/%{name}.conf.headless
+%ghost %{_sysconfdir}/%{name}/%{name}.conf
 %dir %{netdata_conf_stock}/conf.d
 %{netdata_conf_stock}/conf.d/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/netdata
@@ -631,6 +637,7 @@ fi
 - Update to Netdata v1.47.5
 - Rework patch for gcc 4.8 build errors
 - Remove _vpath_builddir redefinition needed by cmake
+- Use update-alternatives to handle configuration files swap
 - *** Upstream changelog ***
 - * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
 - - Update from upstream
