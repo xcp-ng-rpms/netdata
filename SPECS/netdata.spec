@@ -252,7 +252,7 @@ go plugin for netdata
 %package ui
 BuildArch: noarch
 Summary:   Ready to use netdata for XCP-ng - with web UI enabled
-Requires:  netdata
+Requires:  netdata = %{version}-%{release}
 # let this package's POST run after that from netdata
 # to avoid a race over the /etc/netdata/netdata.conf symlink
 # (and also we need to restart the netdata service)
