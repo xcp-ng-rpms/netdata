@@ -3,27 +3,23 @@
 ExcludeArch: s390x
 %endif
 
-# Because libnetfilter_acct-devel is not available in el7
-%if 0%{?rhel} && 0%{?rhel} >= 7
-%bcond_with netfilteracct
-%else
-%bcond_without netfilteracct
-%endif
-
 # Because cups is too old in el7 and log2journal is not available
-%if 0%{?rhel} && 0%{?rhel} <= 7
+# Because libnetfilter_acct-devel is not available in el7
+# Because protobuf is too old in el7
+%if 0%{?rhel} && 0%{?rhel} == 7
 %bcond_with cups
 %bcond_with log2journal
+%bcond_without bundled_protobuf
 %else
 %bcond_without cups
 %bcond_without log2journal
+%bcond_with bundled_protobuf
 %endif
 
-# Because protobuf is too old in el7
-%if 0%{?rhel} && 0%{?rhel} == 7
-%bcond_without bundled_protobuf
+%if 0%{?rhel}
+%bcond_with netfilteracct
 %else
-%bcond_with bundled_protobuf
+%bcond_without netfilteracct
 %endif
 
 # Because judy-devel is not available in el8 for more than 1 year
@@ -33,6 +29,26 @@ ExcludeArch: s390x
 %bcond_with bundled_judy
 %endif
 
+# Only on fedora
+%if 0%{?fedora}
+%ifarch x86_64 aarch64
+%bcond_without xenstat
+%else
+%bcond_with xenstat
+%endif
+%else
+%bcond_with xenstat
+%endif
+
+%bcond_without ml
+%bcond_without exporter_mongodb
+%bcond_with ebpf
+%if 0%{?fedora} && 0%{?fedora} >= 40
+%bcond_without plugin_go
+%else
+%bcond_with plugin_go
+%endif
+
 %if 0%{?rhel} && 0%{?rhel} <= 7
 # This is temporary and should eventually be resolved. This bypasses
 # the default rhel __os_install_post which throws a python compile
@@ -40,11 +56,14 @@ ExcludeArch: s390x
 %global __os_install_post %{nil}
 %endif
 
+# Workaroound for Missing build-id on go.d.plugin
+%global _missing_build_ids_terminate_build 0
+
 # We use some plugins which need suid
 %global  _hardened_build 1
 
 # Build release candidate
-%global upver        1.44.3
+%global upver        1.47.5
 #global rcver        rc0
 
 # Last python 2 support (el7 only)
@@ -52,41 +71,40 @@ ExcludeArch: s390x
 # el8 only
 %global judy_ver 1.0.5-netdata2
 
-# 
-%global plugin_go_ver 0.58.0
-
 %global netdata_conf_stock %{_prefix}/lib/%{name}
 
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
-Release:        1%{?dist}
+Release:        4%{?dist}
 Summary:        Real-time performance monitoring
 # For a breakdown of the licensing, see license REDISTRIBUTED.md
-License:        GPL-3.0-only
+License:        GPL-3.0-or-later
 URL:            http://my-netdata.io
-Source0:        https://github.com/netdata/netdata/releases/download/v%{upver}%{?rcver:-%{rcver}}/%{name}-v%{upver}%{?rcver:-%{rcver}}.tar.gz
+#Source0:        https://github.com/netdata/netdata/releases/download/v%%{upver}%%{?rcver:-%%{rcver}}/%%{name}-v%%{upver}%%{?rcver:-%%{rcver}}.tar.gz
+# Use make-source.sh script to build tarball without closed source part
+Source0:        %{name}-%{upver}%{?rcver:-%{rcver}}.tar.gz
 Source1:        netdata.tmpfiles.conf
-Source2:        netdata.init
 Source3:        netdata.conf
 Source4:        netdata.profile
 Source5:        README-packager.md
-Source20:       https://github.com/netdata/go.d.plugin/releases/download/v%{plugin_go_ver}/go.d.plugin-config-v%{plugin_go_ver}.tar.gz
-Source21:       netdata-install-go-plugins.sh
+# Only for fedora 40+
+# Use create-go-vendor.sh script to build tarball with all go vendor parts
+Source20:       go.d.plugin-vendor-%%{upver}%%{?rcver:-%%{rcver}}.tar.gz
 # Only for el7
 Source10:       https://github.com/protocolbuffers/protobuf/releases/download/v%{protobuf_cpp_ver}/protobuf-cpp-%{protobuf_cpp_ver}.tar.gz
 # Only for el8
 Source11:       https://github.com/netdata/libjudy/archive/v%{judy_ver}/libjudy-%{judy_ver}.tar.gz
-Patch0:         netdata-fix-shebang-1.41.0.patch
+# Use make-shebang-patch.sh script to build patch
+Patch0:         netdata-fix-shebang-1.47.0.patch
+Patch1:         netdata-remove-web-v2.patch
 %if 0%{?fedora}
 # Remove embedded font
-Patch10:        netdata-remove-fonts-1.41.0.patch
+Patch10:        netdata-remove-fonts-1.46.0.patch
 %endif
-
 BuildRequires:  zlib-devel
 BuildRequires:  git
-BuildRequires:  autoconf
-BuildRequires:  autoconf-archive
-BuildRequires:  automake
+BuildRequires:  cmake
+BuildRequires:  gcc-c++
 BuildRequires:  pkgconfig
 BuildRequires:  libuuid-devel
 BuildRequires:  freeipmi-devel
@@ -103,15 +121,14 @@ BuildRequires:  openssl-devel
 BuildRequires:  libmnl-devel
 BuildRequires:  make
 BuildRequires:  libcurl-devel
-BuildRequires:  systemd
 BuildRequires:  openssl-devel
 BuildRequires:  libpfm-devel
 BuildRequires:  libyaml-devel
-### TODO Remove condition when autogen become available in el9
-%if 0%{?rhel} && 0%{?rhel} == 9
-%else
-BuildRequires:  autogen
+BuildRequires:  ninja-build
+%if %{with plugin_go}
+BuildRequires:  golang >= 1.21
 %endif
+BuildRequires:  systemd-devel
 
 # Prometheus
 BuildRequires:  snappy-devel
@@ -120,19 +137,28 @@ BuildRequires:  protobuf-c-devel
 BuildRequires:  findutils
 
 # Cloud client
-BuildRequires:  cmake
-BuildRequires:  gcc-c++
 BuildRequires:  json-c-devel
 BuildRequires:  libcap-devel
 
 # For tests
 BuildRequires:  libcmocka-devel
 
+# ebpf
+#BuildRequires:  elfutils-libelf-devel
+# exporter mongodb
+%if %{with exporter_mongodb}
+BuildRequires:  pkgconfig(libmongoc-1.0)
+%endif
+
+%if %{with xenstat}
+BuildRequires:  xen-devel
+%endif
 %if %{with cups}
 BuildRequires:  cups-devel >= 1.7
 %endif
 %if %{with netfilteracct}
 BuildRequires:  libnetfilter_acct-devel
+BuildRequires:  libmnl-devel
 %endif
 # Only Fedora or el8+
 %if 0%{?fedora} || 0%{?rhel} >= 8
@@ -169,6 +195,7 @@ happened, on your systems and applications.
 %package data
 BuildArch:      noarch
 Summary:        Data files for netdata
+License:        GPL-3.0-or-later
 Requires:       /usr/sbin/useradd
 Requires:       /usr/sbin/groupadd
 Requires:       /usr/bin/systemctl
@@ -179,6 +206,7 @@ Data files for netdata
 %package conf
 BuildArch:      noarch
 Summary:        Configuration files for netdata
+License:        GPL-3.0-or-later
 Requires:       logrotate
 
 %description conf
@@ -186,20 +214,35 @@ Configuration files for netdata
 
 %package freeipmi
 Summary:        FreeIPMI plugin for netdata
+License:        GPL-3.0-or-later
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-License:        GPLv3
 
 %description freeipmi
 freeipmi plugin for netdata
 
+%package go.d.plugin
+Summary:        Go plugin for netdata
+License:        GPL-3.0-or-later
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description go.d.plugin
+go plugin for netdata
+
 %prep
-%setup -qn %{name}-v%{upver}%{?rcver:-%{rcver}}
-%patch0 -p1
+%setup -qn %{name}-%{upver}%{?rcver:-%{rcver}}
+%patch -P0 -p1
+%patch -P1 -p1
 %if 0%{?fedora}
 # Remove embedded font(added in requires)
-%patch10 -p1
-rm -rf web/fonts web/gui/dashboard/static/media
+%patch -P10 -p1
+rm -rf src/web/gui/v1/fonts/
 %endif
+# Remove closed source parts if present
+if [ -d src/web/gui/v2 ] ; then
+    rm -rf src/web/gui/v2 src/web/gui/index.html
+    cp -a src/web/gui/v1/index.html src/web/gui/index.html
+fi
+
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
 %if %{with bundled_protobuf}
@@ -208,19 +251,14 @@ tar -xzf %{SOURCE10} -C externaldeps/protobuf
 %endif
 ### END netdata cloud
 
-### BEGIN el8 judy dirty hack
-%if %{with bundled_judy}
-mkdir -p externaldeps/libJudy
-tar -xzf %{SOURCE11} -C externaldeps/libJudy
+### BEGIN go.d.plugin
+%if %{with plugin_go}
+pushd src/go
+tar -xf %{SOURCE20}
+popd
 %endif
-### END el8 judy dirty hack
+### END go.d.plugin
 
-gover=$(grep go.d.plugin packaging/go.d.checksums | grep linux-amd64 | cut -d ' ' -f2 | sed -e 's/*go\.d\.plugin-v\([0-9.]\+\).linux-amd64.tar.gz/\1/')
-if [ "${gover}" != "%{plugin_go_ver}" ]
-then
-  echo "Version of go.d.plugin mismatch: must be \"${gover}\", got \"%{plugin_go_ver}\""
-  exit 1
-fi
 
 %build
 ### BEGIN netdata cloud
@@ -237,74 +275,89 @@ cp -a externaldeps/protobuf/protobuf-%{protobuf_cpp_ver}/src externaldeps/protob
 %endif
 ### END netdata cloud
 
-### BEGIN el8 judy dirty hack
-%if %{with bundled_judy}
-pushd externaldeps/libJudy/libjudy-%{judy_ver}
-libtoolize --force --copy
-aclocal
-autoheader
-automake --add-missing --force --copy --include-deps
-autoconf
-%configure
-make -C src
-ar -r src/libJudy.a src/Judy*/*.o
-popd
-cp -a externaldeps/libJudy/libjudy-%{judy_ver}/src/libJudy.a externaldeps/libJudy/
-cp -a externaldeps/libJudy/libjudy-%{judy_ver}/src/Judy.h externaldeps/libJudy/
-%endif
-### END el8 judy dirty hack
-
-autoreconf -ivf
-%configure \
-    --enable-plugin-freeipmi \
-%if %{with netfilteracct}
-    --enable-plugin-nfacct \
+%cmake -G Ninja \
+    -DCMAKE_INSTALL_PREFIX=/ \
+%if 0%{?rhel} && 0%{?rhel} == 8
+    -DUSE_CXX_11=On \
 %endif
 %if %{with cups}
-    --enable-plugin-cups \
+    -DENABLE_PLUGIN_CUPS=On \
+%else
+    -DENABLE_PLUGIN_CUPS=Off \
 %endif
+%if %{with netfilteracct}
+    -DENABLE_PLUGIN_NFACCT=On \
+%else
+    -DENABLE_PLUGIN_NFACCT=Off \
+%endif
+    -DENABLE_PLUGIN_FREEIPMI=On \
 %if %{with bundled_protobuf}
-    --with-bundled-protobuf \
+    -DENABLE_BUNDLED_PROTOBUF=On \
+%else
+    -DENABLE_BUNDLED_PROTOBUF=Off \
 %endif
-%if %{with bundled_judy}
-    --with-bundled-libJudy \
+%if %{with xenstat}
+    -DENABLE_PLUGIN_XENSTAT=On \
+%else
+    -DENABLE_PLUGIN_XENSTAT=Off \
 %endif
-    --with-zlib \
-    --with-math \
-    --with-user=netdata
-    
-%make_build
+%if %{with ebpf}
+    -DENABLE_PLUGIN_EBPF=On \
+%else
+    -DENABLE_PLUGIN_EBPF=Off \
+%endif
+%if %{with ml}
+    -DENABLE_ML=On \
+%else
+    -DENABLE_ML=Off \
+%endif
+%if %{with exporter_mongodb}
+    -DENABLE_EXPORTER_MONGODB=On \
+%else
+    -DENABLE_EXPORTER_MONGODB=Off \
+%endif
+    -DENABLE_ACLK=On \
+    -DENABLE_CLOUD=On \
+    -DENABLE_DBENGINE=On \
+    -DENABLE_H2O=On \
+    -DENABLE_PLUGIN_APPS=On \
+    -DENABLE_PLUGIN_CGROUP_NETWORK=On \
+    -DENABLE_PLUGIN_DEBUGFS=On \
+%if %{with plugin_go}
+    -DENABLE_PLUGIN_GO=On \
+%else
+    -DENABLE_PLUGIN_GO=Off \
+%endif
+    -DENABLE_PLUGIN_LOCAL_LISTENERS=On \
+    -DENABLE_PLUGIN_PERF=On \
+    -DENABLE_PLUGIN_SLABINFO=On \
+    -DENABLE_PLUGIN_SYSTEMD_JOURNAL=On \
+    -DENABLE_PLUGIN_LOGS_MANAGEMENT=On \
+    -DENABLE_EXPORTER_PROMETHEUS_REMOTE_WRITE=On \
+    -DENABLE_BUNDLED_JSONC=Off \
+    -DENABLE_BUNDLED_YAML=Off
 
-# Integrate go plugins
-mkdir conf.d
-tar -xf %{SOURCE20} -C conf.d/
+%{cmake_build}
 
 %install
-%make_install
+%{cmake_install}
 find %{buildroot} -name '.keep' -delete
 # Unit file
 mkdir -p %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{_tmpfilesdir}
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d
-%if 0%{?rhel} && 0%{?rhel} <= 7
-install -Dp -m 0644 system/systemd/netdata.service.v235 %{buildroot}%{_unitdir}/%{name}.service
-%else
-install -Dp -m 0644 system/systemd/netdata.service %{buildroot}%{_unitdir}/%{name}.service
+%if 0%{?rhel} && 0%{?rhel} <= 8
+%global _vpath_builddir .
 %endif
+install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service %{buildroot}%{_unitdir}/%{name}.service
 install -p -m 0644 %{SOURCE1} %{buildroot}%{_tmpfilesdir}/%{name}.conf
-install -Dp -m 0644 system/logrotate/netdata %{buildroot}%{_sysconfdir}/logrotate.d/netdata
+install -Dp -m 0644 %{_vpath_builddir}/system/logrotate/netdata %{buildroot}%{_sysconfdir}/logrotate.d/netdata
 
 mkdir -p %{buildroot}%{_localstatedir}/lib/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/cache/%{name}
 
 install -p -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/%{name}/
-# it's better to put stock config file in a noarch pkg (like systemd)
-%ifnarch i686
-mkdir -p %{buildroot}%{netdata_conf_stock}/conf.d
-mv %{buildroot}%{_libdir}/%{name}/conf.d/* %{buildroot}%{netdata_conf_stock}/conf.d/
-sed -i -e '/NETDATA_STOCK_CONFIG_DIR/ s/lib64/lib/' %{buildroot}%{_sysconfdir}/%{name}/edit-config
-%endif
 sed -i -e '/^script_dir/s;=.*;="\$\{NETDATA_USER_CONFIG_DIR:-%{_sysconfdir}/netdata\}";' \
     %{buildroot}%{_sysconfdir}/%{name}/edit-config
 
@@ -326,33 +379,26 @@ done
 mkdir -p %{buildroot}%{_sysconfdir}/profile.d
 install -p -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/profile.d/netdata.sh
 sed -i -e '/NETDATA_STOCK_CONFIG_DIR/s;@STOCK_CONFIG_DIR@;%{netdata_conf_stock};' %{buildroot}%{_sysconfdir}/profile.d/netdata.sh
-
-# Integrate go plugins
-mkdir -p %{buildroot}%{_sysconfdir}/%{name}/go.d
-install -p conf.d/go.d.conf %{buildroot}%{netdata_conf_stock}/conf.d/go.d.conf
-cp -rp conf.d/go.d %{buildroot}%{netdata_conf_stock}/conf.d/go.d
-install -p -m 0644 packaging/go.d.checksums %{buildroot}%{_datadir}/%{name}/go.d.checksums
-install -p -m 0750 %{SOURCE21} %{buildroot}%{_sbindir}/netdata-install-go-plugins.sh
-sed -i \
-    -e 's;@PLUGIN_GO_VERSION@;%{plugin_go_ver};' \
-    -e 's;@DATADIR@;%{_datadir};' \
-    -e 's;@LIBEXEC@;%{_libexecdir};' \
-    %{buildroot}%{_sbindir}/netdata-install-go-plugins.sh
     
 rm -f %{buildroot}%{_sysconfdir}/%{name}/netdata-updater.conf
+rm -f %{buildroot}%{_libexecdir}/%{name}/netdata-updater.sh
+rm -rf %{buildroot}%{_prefix}/lib/netdata/system
+rm -rf %{buildroot}%{_localstatedir}/lib/%{name}/config
 
 %check
-make tests
+%ctest
 
 %pre data
 getent group netdata > /dev/null || groupadd -r netdata
-getent passwd netdata > /dev/null || useradd -r -g netdata -c "NetData User" -s /sbin/nologin -d /var/log/%{name} netdata
+getent passwd netdata > /dev/null || useradd -r -g netdata -G systemd-journal -c "NetData User" -s /sbin/nologin -d /var/log/%{name} netdata
 
 %post
 sed -i -e '/web files group/ s/root/netdata/' /etc/netdata/netdata.conf ||:
 sed -i -e '/stock config directory/ s;/etc/netdata/conf.d;/usr/lib/netdata/conf.d;' /etc/netdata/netdata.conf ||:
 sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d;/usr/lib/netdata/conf.d/health.d;' /etc/netdata/netdata.conf ||:
 %systemd_post %{name}.service
+%tmpfiles_create %{name}.conf
+echo "Netdata config should be edited with %{_libexecdir}/%{name}/edit-config"
 
 %preun
 %systemd_preun %{name}.service
@@ -370,24 +416,67 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 %{_sbindir}/log2journal
 %endif
 %{_sbindir}/systemd-cat-native
-%{_libexecdir}/%{name}/*
 %{_unitdir}/%{name}.service
 %{_tmpfilesdir}/%{name}.conf
-%caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
+%dir %{_libexecdir}/%{name}
+%{_libexecdir}/%{name}/charts.d/
+%dir %{_libexecdir}/%{name}/plugins.d
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/install-service.sh
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/alarm-notify.sh
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/anonymous-statistics.sh
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-name.sh
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/get-kubernetes-labels.sh
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/ioping.plugin
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/loopsleepms.sh.inc
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/system-info.sh
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/tc-qos-helper.sh
+
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
+
+%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/local-listeners
+
+%caps(cap_sys_admin,cap_sys_ptrace,cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/network-viewer.plugin
+
 %if %{with cups}
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cups.plugin
 %endif
+%if %{with netfilteracct}
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/nfacct.plugin
+%endif
+
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/charts.d.plugin
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/charts.d.dryrun-helper.sh
+
+%caps(cap_dac_read_search,cap_sys_ptrace=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/apps.plugin
+%if 0%{?rhel} >= 9 || 0%{?fedora} >= 36
+%caps(cap_perfmon=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
+%else
+%caps(cap_setuid=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/perf.plugin
+%endif
+%caps(cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/slabinfo.plugin
+%caps(cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/systemd-journal.plugin
+%caps(cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/debugfs.plugin
+%if %{with xenstat}
+%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/xenstat.plugin
+%endif
+
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/python.d.plugin
+%attr(0750,root,netdata) %{_libexecdir}/%{name}/python.d
+
 %exclude %{_libexecdir}/%{name}/edit-config
 %exclude %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
-%attr(0755, netdata, netdata) %{_localstatedir}/lib/%{name}
-%attr(0755, netdata, netdata) %dir %{_localstatedir}/cache/%{name}
-%attr(0755, netdata, netdata) %dir %{_localstatedir}/log/%{name}
+%if %{with plugin_go}
+%exclude %{_libexecdir}/%{name}/plugins.d/go.d.plugin
+%exclude %{_libexecdir}/%{name}/plugins.d/ndsudo
+%endif
+
+%attr(0770, netdata, netdata) %dir %{_localstatedir}/lib/%{name}
+%attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}/registry
+%attr(0770,netdata,netdata) %dir %{_localstatedir}/lib/%{name}/cloud.d
+%attr(0770, netdata, netdata) %dir %{_localstatedir}/cache/%{name}
+%attr(0750, netdata, netdata) %dir %{_localstatedir}/log/%{name}
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
-%attr(0750,root,netdata)%{_sbindir}/netdata-install-go-plugins.sh
 
 %files conf
 %doc README.md
@@ -412,14 +501,92 @@ sed -i -e '/stock health configuration directory/ s;/etc/netdata/conf.d/health.d
 %license LICENSE REDISTRIBUTED.md
 %dir %{_datadir}/%{name}
 %attr(-, root, netdata) %{_datadir}/%{name}/web
-%{_datadir}/%{name}/go.d.checksums
 
 %files freeipmi
 %doc README.md
 %license LICENSE REDISTRIBUTED.md
 %caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
+%if %{with plugin_go}
+%files go.d.plugin
+%doc README.md
+%license LICENSE REDISTRIBUTED.md
+%caps(cap_dac_read_search,cap_net_admin,cap_net_raw=eip) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/go.d.plugin
+%caps(cap_setuid=ep)%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/ndsudo
+%endif
+
+
 %changelog
+* Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
+- Update from upstream
+
+* Thu Oct 10 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.4-1
+- Update from upstream
+
+* Wed Oct 02 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.3-1
+- Update from upstream
+
+* Thu Sep 26 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.2-1
+- Update from upstream
+
+* Tue Sep 10 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.1-1
+- Update from upstream
+
+* Fri Aug 23 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.0-1
+- Update from upstream
+
+* Thu Aug 22 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-5
+- Fix journald access
+  See https://bugzilla.redhat.com/show_bug.cgi?id=2298058
+  
+* Thu Aug 15 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-4
+- Remove closed source parts from binary rpms
+  See https://bugzilla.redhat.com/show_bug.cgi?id=2304167
+
+* Wed Aug 07 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-3
+- Change BuildRequires from pkgconfig(libxenlight) and pkgconfig(libxenstat) to xen-devel package
+- Enable go plugin only for Fedora 40+
+
+* Mon Jul 29 2024 Miroslav Suchý <msuchy@redhat.com> - 1.46.3-2
+- convert license to SPDX
+
+* Fri Jul 26 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.3-1
+- Update from upstream
+
+* Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.46.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Mon Jul 15 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.2-1
+- Update from upstream
+
+* Fri Jun 21 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.1-1
+- Update from upstream
+- Disable go plugin for all builds
+
+* Wed Jun 19 2024 Didier Fabert <didier.fabert@gmail.com> 1.46.0-1
+- Update from upstream
+
+* Thu Jun 06 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.6-1
+- Update from upstream
+
+* Thu May 23 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.5-1
+- Update from upstream
+
+* Thu May 09 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.4-1
+- Update from upstream
+
+* Sat Apr 13 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.3-1
+- Update from upstream
+
+* Fri Apr 05 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.2-1
+- Update from upstream
+
+* Wed Mar 27 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.1-1
+- Update from upstream
+
+* Thu Mar 21 2024 Didier Fabert <didier.fabert@gmail.com> 1.45.0-1
+- Update from upstream
+
 * Mon Feb 12 2024 Didier Fabert <didier.fabert@gmail.com> 1.44.3-1
 - Update from upstream
 

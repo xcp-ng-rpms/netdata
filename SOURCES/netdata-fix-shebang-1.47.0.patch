@@ -1,0 +1,633 @@
+Fix shebang according to
+https://docs.fedoraproject.org/en-US/packaging-guidelines/#_shebang_lines
+
+diff -rup a/docs/diagrams/build.sh b/docs/diagrams/build.sh
+--- a/docs/diagrams/build.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/docs/diagrams/build.sh	2024-08-23 07:59:38.134737496 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ path=$(dirname "$0")
+diff -rup a/packaging/check-kernel-config.sh b/packaging/check-kernel-config.sh
+--- a/packaging/check-kernel-config.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/check-kernel-config.sh	2024-08-23 07:59:38.136737476 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ get_kernel_version() {
+   r="$(uname -r | cut -f 1 -d '-')"
+diff -rup a/packaging/docker/run.sh b/packaging/docker/run.sh
+--- a/packaging/docker/run.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/docker/run.sh	2024-08-23 07:59:38.138737457 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #
+ # Entry point script for netdata
+ #
+diff -rup a/packaging/installer/dependencies/arch.sh b/packaging/installer/dependencies/arch.sh
+--- a/packaging/installer/dependencies/arch.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/arch.sh	2024-08-23 07:59:38.140737437 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << ArchLinux: [base] [base-devel] >> | << Manjaro >>
+ 
+diff -rup a/packaging/installer/dependencies/centos.sh b/packaging/installer/dependencies/centos.sh
+--- a/packaging/installer/dependencies/centos.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/centos.sh	2024-08-23 07:59:38.142737417 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << CentOS: [7] [8] [9] >>
+ 
+diff -rup a/packaging/installer/dependencies/clearlinux.sh b/packaging/installer/dependencies/clearlinux.sh
+--- a/packaging/installer/dependencies/clearlinux.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/clearlinux.sh	2024-08-23 07:59:38.144737398 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << ClearLinux: [base] >>
+ 
+diff -rup a/packaging/installer/dependencies/debian.sh b/packaging/installer/dependencies/debian.sh
+--- a/packaging/installer/dependencies/debian.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/debian.sh	2024-08-23 07:59:38.145737388 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << Debian: [9] [10] [11]  >>
+ 
+diff -rup a/packaging/installer/dependencies/fedora.sh b/packaging/installer/dependencies/fedora.sh
+--- a/packaging/installer/dependencies/fedora.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/fedora.sh	2024-08-23 07:59:38.147737368 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << Fedora: [24->38] >>
+ 
+diff -rup a/packaging/installer/dependencies/freebsd.sh b/packaging/installer/dependencies/freebsd.sh
+--- a/packaging/installer/dependencies/freebsd.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/freebsd.sh	2024-08-23 07:59:38.149737348 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << FreeBSD  >>
+ 
+diff -rup a/packaging/installer/dependencies/gentoo.sh b/packaging/installer/dependencies/gentoo.sh
+--- a/packaging/installer/dependencies/gentoo.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/gentoo.sh	2024-08-23 07:59:38.150737339 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << Gentoo >> | << Pentoo >>
+ 
+diff -rup a/packaging/installer/dependencies/ol.sh b/packaging/installer/dependencies/ol.sh
+--- a/packaging/installer/dependencies/ol.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/ol.sh	2024-08-23 07:59:38.152737319 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << Oracle Linux: [8, 9] >>
+ 
+diff -rup a/packaging/installer/dependencies/opensuse.sh b/packaging/installer/dependencies/opensuse.sh
+--- a/packaging/installer/dependencies/opensuse.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/opensuse.sh	2024-08-23 07:59:38.154737299 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << opeSUSE >>
+ # supported versions: leap/15.3 and tumbleweed
+diff -rup a/packaging/installer/dependencies/rockylinux.sh b/packaging/installer/dependencies/rockylinux.sh
+--- a/packaging/installer/dependencies/rockylinux.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/rockylinux.sh	2024-08-23 07:59:38.155737289 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << Rocky Linux:[8.5] >>
+ 
+diff -rup a/packaging/installer/dependencies/ubuntu.sh b/packaging/installer/dependencies/ubuntu.sh
+--- a/packaging/installer/dependencies/ubuntu.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/dependencies/ubuntu.sh	2024-08-23 07:59:38.157737270 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Package tree used for installing netdata on distribution:
+ # << Ubuntu: [18.04] [20.04] [20.10] [21.04] [21.10] >> | << Linux Mint >>
+ 
+diff -rup a/packaging/installer/install-required-packages.sh b/packaging/installer/install-required-packages.sh
+--- a/packaging/installer/install-required-packages.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/installer/install-required-packages.sh	2024-08-23 07:59:38.159737250 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # shellcheck disable=SC2034
+ # We use lots of computed variable names in here, so we need to disable shellcheck 2034
+ 
+diff -rup a/packaging/makeself/build-x86_64-static.sh b/packaging/makeself/build-x86_64-static.sh
+--- a/packaging/makeself/build-x86_64-static.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/build-x86_64-static.sh	2024-08-23 07:59:38.161737231 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+diff -rup a/packaging/makeself/functions.sh b/packaging/makeself/functions.sh
+--- a/packaging/makeself/functions.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/functions.sh	2024-08-23 07:59:38.162737221 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # -----------------------------------------------------------------------------
+diff -rup a/packaging/makeself/install-alpine-packages.sh b/packaging/makeself/install-alpine-packages.sh
+--- a/packaging/makeself/install-alpine-packages.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/install-alpine-packages.sh	2024-08-23 07:59:38.227736582 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env sh
++#!/usr/bin/sh
+ #
+ # Installation script for the alpine host
+ # to prepare the static binary
+diff -rup a/packaging/makeself/install-or-update.sh b/packaging/makeself/install-or-update.sh
+--- a/packaging/makeself/install-or-update.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/install-or-update.sh	2024-08-23 07:59:38.164737201 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+diff -rup a/packaging/makeself/jobs/10-prepare-destination.install.sh b/packaging/makeself/jobs/10-prepare-destination.install.sh
+--- a/packaging/makeself/jobs/10-prepare-destination.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/10-prepare-destination.install.sh	2024-08-23 07:59:38.166737181 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/20-openssl.install.sh b/packaging/makeself/jobs/20-openssl.install.sh
+--- a/packaging/makeself/jobs/20-openssl.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/20-openssl.install.sh	2024-08-23 07:59:38.168737162 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/50-bash-5.1.16.install.sh b/packaging/makeself/jobs/50-bash-5.1.16.install.sh
+--- a/packaging/makeself/jobs/50-bash-5.1.16.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/50-bash-5.1.16.install.sh	2024-08-23 07:59:38.169737152 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/50-curl.install.sh b/packaging/makeself/jobs/50-curl.install.sh
+--- a/packaging/makeself/jobs/50-curl.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/50-curl.install.sh	2024-08-23 07:59:38.171737132 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/50-ioping-1.3.install.sh b/packaging/makeself/jobs/50-ioping-1.3.install.sh
+--- a/packaging/makeself/jobs/50-ioping-1.3.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/50-ioping-1.3.install.sh	2024-08-23 07:59:38.173737112 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/50-libnetfilter_acct-1.0.3.install.sh b/packaging/makeself/jobs/50-libnetfilter_acct-1.0.3.install.sh
+--- a/packaging/makeself/jobs/50-libnetfilter_acct-1.0.3.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/50-libnetfilter_acct-1.0.3.install.sh	2024-08-23 07:59:38.175737093 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #
+ # Install the libnetfilter_acct and it's dependency libmnl
+diff -rup a/packaging/makeself/jobs/70-netdata-git.install.sh b/packaging/makeself/jobs/70-netdata-git.install.sh
+--- a/packaging/makeself/jobs/70-netdata-git.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/70-netdata-git.install.sh	2024-08-23 07:59:38.176737083 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=./packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/90-netdata-runtime-check.sh b/packaging/makeself/jobs/90-netdata-runtime-check.sh
+--- a/packaging/makeself/jobs/90-netdata-runtime-check.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/90-netdata-runtime-check.sh	2024-08-23 07:59:38.178737063 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=./packaging/makeself/functions.sh
+diff -rup a/packaging/makeself/jobs/99-makeself.install.sh b/packaging/makeself/jobs/99-makeself.install.sh
+--- a/packaging/makeself/jobs/99-makeself.install.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/makeself/jobs/99-makeself.install.sh	2024-08-23 07:59:38.180737044 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck source=packaging/makeself/functions.sh
+diff -rup a/packaging/utils/coverity-scan.sh b/packaging/utils/coverity-scan.sh
+--- a/packaging/utils/coverity-scan.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/utils/coverity-scan.sh	2024-08-23 07:59:38.182737024 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #
+ # Coverity scan script
+ #
+diff -rup a/packaging/utils/find-dll-deps.sh b/packaging/utils/find-dll-deps.sh
+--- a/packaging/utils/find-dll-deps.sh	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/utils/find-dll-deps.sh	2024-08-23 07:59:38.183737014 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ if [ "$#" -lt 1 ]; then
+     echo "Usage: $0 <command1> <command2> ... <commandN>"
+diff -rup a/packaging/windows/fetch-msys2-installer.py b/packaging/windows/fetch-msys2-installer.py
+--- a/packaging/windows/fetch-msys2-installer.py	2024-08-22 16:15:57.000000000 +0200
++++ b/packaging/windows/fetch-msys2-installer.py	2024-08-23 07:59:38.355735323 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ '''Fetch the MSYS2 installer.'''
+ 
+diff -rup a/src/aclk/aclk-schemas/Makefile b/src/aclk/aclk-schemas/Makefile
+--- a/src/aclk/aclk-schemas/Makefile	2024-08-22 16:16:03.000000000 +0200
++++ b/src/aclk/aclk-schemas/Makefile	2024-08-23 07:59:38.185736994 +0200
+@@ -1,4 +1,4 @@
+-SHELL := /usr/bin/env bash -o pipefail
++SHELL := /usr/bin/bash -o pipefail
+ 
+ # This controls the location of the cache.
+ PROJECT := cloud-schemas
+diff -rup a/src/claim/netdata-claim.sh.in b/src/claim/netdata-claim.sh.in
+--- a/src/claim/netdata-claim.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/claim/netdata-claim.sh.in	2024-08-23 07:59:38.187736975 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # netdata
+ # real-time performance and health monitoring, done right!
+ # (C) 2023 Netdata Inc.
+diff -rup a/src/collectors/cgroups.plugin/cgroup-name.sh.in b/src/collectors/cgroups.plugin/cgroup-name.sh.in
+--- a/src/collectors/cgroups.plugin/cgroup-name.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/cgroups.plugin/cgroup-name.sh.in	2024-08-23 07:59:38.188736965 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #shellcheck disable=SC2001
+ 
+ # netdata
+diff -rup a/src/collectors/cgroups.plugin/cgroup-network-helper.sh.in b/src/collectors/cgroups.plugin/cgroup-network-helper.sh.in
+--- a/src/collectors/cgroups.plugin/cgroup-network-helper.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/cgroups.plugin/cgroup-network-helper.sh.in	2024-08-23 07:59:38.190736945 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # shellcheck disable=SC1117
+ 
+ # cgroup-network-helper.sh
+diff -rup a/src/collectors/charts.d.plugin/charts.d.dryrun-helper.sh b/src/collectors/charts.d.plugin/charts.d.dryrun-helper.sh
+--- a/src/collectors/charts.d.plugin/charts.d.dryrun-helper.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/charts.d.plugin/charts.d.dryrun-helper.sh	2024-08-23 07:59:38.192736926 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # shellcheck disable=SC2181
+diff -rup a/src/collectors/charts.d.plugin/charts.d.plugin.in b/src/collectors/charts.d.plugin/charts.d.plugin.in
+--- a/src/collectors/charts.d.plugin/charts.d.plugin.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/charts.d.plugin/charts.d.plugin.in	2024-08-23 07:59:38.194736906 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # netdata
+diff -rup a/src/collectors/ioping.plugin/ioping.plugin.in b/src/collectors/ioping.plugin/ioping.plugin.in
+--- a/src/collectors/ioping.plugin/ioping.plugin.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/ioping.plugin/ioping.plugin.in	2024-08-23 07:59:38.196736886 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # netdata
+diff -rup a/src/collectors/log2journal/tests.sh b/src/collectors/log2journal/tests.sh
+--- a/src/collectors/log2journal/tests.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/log2journal/tests.sh	2024-08-23 07:59:38.197736877 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ if [ -f "${PWD}/log2journal" ]; then
+   log2journal_bin="${PWD}/log2journal"
+diff -rup a/src/collectors/python.d.plugin/python.d.plugin.in b/src/collectors/python.d.plugin/python.d.plugin.in
+--- a/src/collectors/python.d.plugin/python.d.plugin.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/python.d.plugin/python.d.plugin.in	2024-08-23 07:59:38.199736857 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ '''':;
+ pybinary=$(which python3 || which python || which python2)
+ filtered=()
+diff -rup a/src/collectors/python.d.plugin/python_modules/third_party/boinc_client.py b/src/collectors/python.d.plugin/python_modules/third_party/boinc_client.py
+--- a/src/collectors/python.d.plugin/python_modules/third_party/boinc_client.py	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/python.d.plugin/python_modules/third_party/boinc_client.py	2024-08-23 07:59:38.358735294 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#
+ # -*- coding: utf-8 -*-
+ #
+ # client.py - Somewhat higher-level GUI_RPC API for BOINC core client
+diff -rup a/src/collectors/systemd-journal.plugin/systemd-journal-self-signed-certs.sh b/src/collectors/systemd-journal.plugin/systemd-journal-self-signed-certs.sh
+--- a/src/collectors/systemd-journal.plugin/systemd-journal-self-signed-certs.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/systemd-journal.plugin/systemd-journal-self-signed-certs.sh	2024-08-23 07:59:38.203736818 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ me="${0}"
+ dst="/etc/ssl/systemd-journal"
+diff -rup a/src/collectors/tc.plugin/tc-qos-helper.sh.in b/src/collectors/tc.plugin/tc-qos-helper.sh.in
+--- a/src/collectors/tc.plugin/tc-qos-helper.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/collectors/tc.plugin/tc-qos-helper.sh.in	2024-08-23 07:59:38.205736798 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ # netdata
+ # real-time performance and health monitoring, done right!
+diff -rup a/src/daemon/anonymous-statistics.sh.in b/src/daemon/anonymous-statistics.sh.in
+--- a/src/daemon/anonymous-statistics.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/daemon/anonymous-statistics.sh.in	2024-08-23 07:59:38.229736562 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env sh
++#!/usr/bin/sh
+ 
+ # Valid actions:
+ 
+diff -rup a/src/daemon/get-kubernetes-labels.sh.in b/src/daemon/get-kubernetes-labels.sh.in
+--- a/src/daemon/get-kubernetes-labels.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/daemon/get-kubernetes-labels.sh.in	2024-08-23 07:59:38.206736788 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ me="$(basename "${0}")"
+ 
+ # Checks if netdata is running in a kubernetes pod and fetches:
+diff -rup a/src/daemon/system-info.sh b/src/daemon/system-info.sh
+--- a/src/daemon/system-info.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/daemon/system-info.sh	2024-08-23 07:59:38.231736542 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env sh
++#!/usr/bin/sh
+ 
+ # -------------------------------------------------------------------------------------------------
+ # detect the kernel
+diff -rup a/src/exporting/nc-exporting.sh b/src/exporting/nc-exporting.sh
+--- a/src/exporting/nc-exporting.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/exporting/nc-exporting.sh	2024-08-23 07:59:38.208736769 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+diff -rup a/src/go/plugin/go.d/hack/go-build.sh b/src/go/plugin/go.d/hack/go-build.sh
+--- a/src/go/plugin/go.d/hack/go-build.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/go/plugin/go.d/hack/go-build.sh	2024-08-23 07:59:38.210736749 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+diff -rup a/src/health/notifications/alarm-email.sh b/src/health/notifications/alarm-email.sh
+--- a/src/health/notifications/alarm-email.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/health/notifications/alarm-email.sh	2024-08-23 07:59:38.212736729 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+ # OBSOLETE - REPLACED WITH
+diff -rup a/src/health/notifications/alarm-notify.sh.in b/src/health/notifications/alarm-notify.sh.in
+--- a/src/health/notifications/alarm-notify.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/src/health/notifications/alarm-notify.sh.in	2024-08-23 07:59:38.214736709 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #shellcheck source=/dev/null disable=SC2086,SC2154
+ 
+ # netdata
+diff -rup a/src/health/notifications/alarm-test.sh b/src/health/notifications/alarm-test.sh
+--- a/src/health/notifications/alarm-test.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/health/notifications/alarm-test.sh	2024-08-23 07:59:38.215736700 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ 
+ # netdata
+ # real-time performance and health monitoring, done right!
+diff -rup a/src/libnetdata/gorilla/benchmark.sh b/src/libnetdata/gorilla/benchmark.sh
+--- a/src/libnetdata/gorilla/benchmark.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/libnetdata/gorilla/benchmark.sh	2024-08-23 07:59:38.217736680 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #
+diff -rup a/src/libnetdata/gorilla/fuzzer.sh b/src/libnetdata/gorilla/fuzzer.sh
+--- a/src/libnetdata/gorilla/fuzzer.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/src/libnetdata/gorilla/fuzzer.sh	2024-08-23 07:59:38.219736660 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ #
+diff -rup a/src/ml/dlib/dlib/travis/build-and-test.sh b/src/ml/dlib/dlib/travis/build-and-test.sh
+--- a/src/ml/dlib/dlib/travis/build-and-test.sh	2024-08-22 16:16:06.000000000 +0200
++++ b/src/ml/dlib/dlib/travis/build-and-test.sh	2024-08-23 07:59:38.220736650 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # Exit if anything fails.
+ set -eux
+ 
+diff -rup a/src/ml/dlib/tools/convert_dlib_nets_to_caffe/running_a_dlib_model_with_caffe_example.py b/src/ml/dlib/tools/convert_dlib_nets_to_caffe/running_a_dlib_model_with_caffe_example.py
+--- a/src/ml/dlib/tools/convert_dlib_nets_to_caffe/running_a_dlib_model_with_caffe_example.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/ml/dlib/tools/convert_dlib_nets_to_caffe/running_a_dlib_model_with_caffe_example.py	2024-08-23 07:59:38.363735245 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ # This script takes the dlib lenet model trained by the
+ # examples/dnn_introduction_ex.cpp example program and runs it using caffe. 
+diff -rup a/src/web/server/h2o/libh2o/deps/brotli/python/bro.py b/src/web/server/h2o/libh2o/deps/brotli/python/bro.py
+--- a/src/web/server/h2o/libh2o/deps/brotli/python/bro.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/brotli/python/bro.py	2024-08-23 07:59:38.370735176 +0200
+@@ -1,4 +1,4 @@
+-#! /usr/bin/env python
++#! /usr/bin/python3
+ """bro %s -- compression/decompression utility using the Brotli algorithm."""
+ 
+ from __future__ import print_function
+diff -rup a/src/web/server/h2o/libh2o/deps/brotli/python/tests/compatibility_test.py b/src/web/server/h2o/libh2o/deps/brotli/python/tests/compatibility_test.py
+--- a/src/web/server/h2o/libh2o/deps/brotli/python/tests/compatibility_test.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/brotli/python/tests/compatibility_test.py	2024-08-23 07:59:38.372735156 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ from __future__ import print_function
+ import glob
+ import sys
+diff -rup a/src/web/server/h2o/libh2o/deps/brotli/python/tests/custom_dictionary_test.py b/src/web/server/h2o/libh2o/deps/brotli/python/tests/custom_dictionary_test.py
+--- a/src/web/server/h2o/libh2o/deps/brotli/python/tests/custom_dictionary_test.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/brotli/python/tests/custom_dictionary_test.py	2024-08-23 07:59:38.374735136 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ from __future__ import print_function
+ import sys
+ import os
+diff -rup a/src/web/server/h2o/libh2o/deps/brotli/python/tests/roundtrip_test.py b/src/web/server/h2o/libh2o/deps/brotli/python/tests/roundtrip_test.py
+--- a/src/web/server/h2o/libh2o/deps/brotli/python/tests/roundtrip_test.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/brotli/python/tests/roundtrip_test.py	2024-08-23 07:59:38.377735107 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ from __future__ import print_function
+ import sys
+ import os
+diff -rup a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_arm.py b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_arm.py
+--- a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_arm.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_arm.py	2024-08-23 07:59:38.379735087 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ import sys
+ 
+diff -rup a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr_extra.py b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr_extra.py
+--- a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr_extra.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr_extra.py	2024-08-23 07:59:38.384735038 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ import sys
+ 
+diff -rup a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr.py b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr.py
+--- a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/mult_avr.py	2024-08-23 07:59:38.382735058 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ import sys
+ 
+diff -rup a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_arm.py b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_arm.py
+--- a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_arm.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_arm.py	2024-08-23 07:59:38.387735009 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ import sys
+ 
+diff -rup a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_avr.py b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_avr.py
+--- a/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_avr.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/deps/picotls/deps/micro-ecc/scripts/square_avr.py	2024-08-23 07:59:38.389734989 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ 
+ import sys
+ 
+diff -rup a/src/web/server/h2o/libh2o/misc/mkhufftbl.py b/src/web/server/h2o/libh2o/misc/mkhufftbl.py
+--- a/src/web/server/h2o/libh2o/misc/mkhufftbl.py	2024-08-22 16:16:06.000000000 +0200
++++ b/src/web/server/h2o/libh2o/misc/mkhufftbl.py	2024-08-23 07:59:38.391734969 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ # -*- coding: utf-8 -*-
+ 
+ # The MIT License
+diff -rup a/system/edit-config b/system/edit-config
+--- a/system/edit-config	2024-08-22 16:15:58.000000000 +0200
++++ b/system/edit-config	2024-08-23 07:59:38.232736532 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env sh
++#!/usr/bin/sh
+ 
+ # shellcheck disable=SC1091
+ [ -f /etc/profile ] && . /etc/profile
+diff -rup a/system/install-service.sh.in b/system/install-service.sh.in
+--- a/system/install-service.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/system/install-service.sh.in	2024-08-23 07:59:38.234736513 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env sh
++#!/usr/bin/sh
+ 
+ # SPDX-License-Identifier: GPL-3.0-or-later
+ 
+diff -rup a/system/lsb/init.d/netdata.in b/system/lsb/init.d/netdata.in
+--- a/system/lsb/init.d/netdata.in	2024-08-22 16:15:58.000000000 +0200
++++ b/system/lsb/init.d/netdata.in	2024-08-23 07:59:38.222736631 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #
+ # Netdata LSB start script
+ #
+diff -rup a/tests/health_mgmtapi/health-cmdapi-test.sh.in b/tests/health_mgmtapi/health-cmdapi-test.sh.in
+--- a/tests/health_mgmtapi/health-cmdapi-test.sh.in	2024-08-22 16:15:58.000000000 +0200
++++ b/tests/health_mgmtapi/health-cmdapi-test.sh.in	2024-08-23 07:59:38.224736611 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ # shellcheck disable=SC1117,SC2034,SC2059,SC2086,SC2181
+ 
+ NETDATA_VARLIB_DIR="@varlibdir_POST@"
+diff -rup a/tests/run-unit-tests.sh b/tests/run-unit-tests.sh
+--- a/tests/run-unit-tests.sh	2024-08-22 16:15:58.000000000 +0200
++++ b/tests/run-unit-tests.sh	2024-08-23 07:59:38.226736591 +0200
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/usr/bin/bash
+ #
+ # Copyright: 2020-2024 (c) Netdata Inc.
+ # SPDX-License-Identifier: GPL-3.0-or-later
