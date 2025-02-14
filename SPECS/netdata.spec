@@ -540,10 +540,10 @@ fi
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/system-info.sh
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/tc-qos-helper.sh
 
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network
 %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/cgroup-network-helper.sh
 
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/local-listeners
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/local-listeners
 
 %caps(cap_sys_admin,cap_sys_ptrace,cap_dac_read_search=ep) %attr(0750,root,netdata) %{_libexecdir}/%{name}/plugins.d/network-viewer.plugin
 
@@ -621,7 +621,7 @@ fi
 %files freeipmi
 %doc README.md
 %license LICENSE REDISTRIBUTED.md
-%caps(cap_setuid=ep) %attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
+%attr(4750,root,netdata) %{_libexecdir}/%{name}/plugins.d/freeipmi.plugin
 
 %if %{with plugin_go}
 %files go.d.plugin
@@ -638,6 +638,7 @@ fi
 - Rework patch for gcc 4.8 build errors
 - Remove _vpath_builddir redefinition needed by cmake
 - Use update-alternatives to handle configuration files swap
+- Remove cap_setuid=pe for plugin files that have the setuid bit set
 - *** Upstream changelog ***
 - * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
 - - Update from upstream
