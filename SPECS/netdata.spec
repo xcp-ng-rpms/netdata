@@ -421,7 +421,7 @@ find %{buildroot} -name '.keep' -delete
 mkdir -p %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{_tmpfilesdir}
 mkdir -p %{buildroot}%{_sysconfdir}/logrotate.d
-install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service %{buildroot}%{_unitdir}/%{name}.service
+install -Dp -m 0644 %{_vpath_builddir}/system/systemd/netdata.service.v235 %{buildroot}%{_unitdir}/%{name}.service
 install -p -m 0644 %{SOURCE1} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 install -Dp -m 0644 %{_vpath_builddir}/system/logrotate/netdata %{buildroot}%{_sysconfdir}/logrotate.d/netdata
 
@@ -639,6 +639,7 @@ fi
 - Remove _vpath_builddir redefinition needed by cmake
 - Use update-alternatives to handle configuration files swap
 - Remove cap_setuid=pe for plugin files that have the setuid bit set
+- Use netdata.service file for systemd < 235
 - *** Upstream changelog ***
 - * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
 - - Update from upstream
