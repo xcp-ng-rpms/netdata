@@ -94,6 +94,7 @@ Source1001:     netdata.conf.ui
 Source1002:     xcpng-iptables-restore.sh
 Source1003:     iptables_netdata
 Source1004:     ip6tables_netdata
+Source1005:     netdata-wait-up-and-running.sh
 
 # Use make-shebang-patch.sh script to build patch
 Patch0:         netdata-fix-shebang-1.47.0.patch
@@ -191,6 +192,9 @@ Requires:       glyphicons-halflings-fonts
 %endif
 Requires:       logrotate
 Requires:       libyaml
+
+# XCP-ng: for pstree needed by netdata-wait-up-and-running.sh
+Requires:       psmisc
 
 Requires:       %{name}-data = %{version}-%{release}
 Requires:       %{name}-conf = %{version}-%{release}
@@ -442,6 +446,9 @@ install -d %{buildroot}%{_sysconfdir}/sysconfig
 install -m 600 %{SOURCE1003} %{buildroot}%{_sysconfdir}/sysconfig/iptables_netdata
 install -m 600 %{SOURCE1004} %{buildroot}%{_sysconfdir}/sysconfig/ip6tables_netdata
 
+# XCP-ng: systemd delay stop script
+install -m 755 %{SOURCE1005} %{buildroot}%{_libexecdir}/%{name}/netdata-wait-up-and-running.sh
+
 # Scripts must not be in /etc, /usr/libexec is a better place
 mv %{buildroot}%{_sysconfdir}/%{name}/edit-config %{buildroot}%{_libexecdir}/%{name}/edit-config
 # Fix EOL
@@ -589,6 +596,7 @@ fi
 %{_libexecdir}/%{name}/xcpng-iptables-restore.sh
 %config(noreplace) /etc/sysconfig/iptables_netdata
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
+%{_libexecdir}/%{name}/netdata-wait-up-and-running.sh
 
 %files conf
 %doc README.md
@@ -640,6 +648,7 @@ fi
 - Use update-alternatives to handle configuration files swap
 - Remove cap_setuid=pe for plugin files that have the setuid bit set
 - Use netdata.service file for systemd < 235
+- Replace 'ExecStop=sleep 3' in systemd service unit with a nicer script
 - *** Upstream changelog ***
 - * Thu Oct 24 2024 Didier Fabert <didier.fabert@gmail.com> 1.47.5-1
 - - Update from upstream

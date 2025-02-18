@@ -6,9 +6,9 @@ index 3d52677..055406d 100644
  ExecStart=@sbindir_POST@/netdata -D $EXTRA_OPTS
  # XCP-ng: call script that will load /etc/sysconfig/iptables_netdata if it exists
  ExecStartPre=/usr/libexec/netdata/xcpng-iptables-restore.sh
-+# XCP-ng: Add a delay before stopping netdata to avoid the service to hang and
-+# be in a failed state if stop is called too soon after a start.
-+ExecStop=/usr/bin/sleep 3
++# XCP-ng: Make sure netdata is up and running before stopping it to avoid the
++# service to be in failed state if stop is called too soon after a start.
++ExecStop=/usr/libexec/netdata/netdata-wait-up-and-running.sh
 +ExecStop=/usr/bin/kill --signal SIGTERM $MAINPID
  
  # saving a big db on slow disks may need some time
