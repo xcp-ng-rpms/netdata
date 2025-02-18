@@ -27,7 +27,6 @@
     mode = ram
 
 [web]
-    mode = none
     web files owner = root
     web files group = netdata
 
