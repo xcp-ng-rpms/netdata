@@ -55,7 +55,7 @@ ExcludeArch: s390x
 
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
-Release:        1.1%{?dist}
+Release:        1.2%{?dist}
 Summary:        Real-time performance monitoring
 # For a breakdown of the licensing, see license REDISTRIBUTED.md
 License:        GPL-3.0-only
@@ -79,6 +79,7 @@ Source1001:     netdata.conf.ui
 Source1002:     xcpng-iptables-restore.sh
 Source1003:     iptables_netdata
 Source1004:     ip6tables_netdata
+Source1005:     netdata-wait-up-and-running.sh
 
 Patch0:         netdata-fix-shebang-1.41.0.patch
 %if 0%{?fedora}
@@ -167,6 +168,9 @@ Requires:       glyphicons-halflings-fonts
 %endif
 Requires:       logrotate
 Requires:       libyaml
+
+# XCP-ng: for pstree needed by netdata-wait-up-and-running.sh
+Requires:       psmisc
 
 Requires:       %{name}-data = %{version}-%{release}
 Requires:       %{name}-conf = %{version}-%{release}
@@ -388,6 +392,9 @@ install -d %{buildroot}%{_sysconfdir}/sysconfig
 install -m 600 %{SOURCE1003} %{buildroot}%{_sysconfdir}/sysconfig/iptables_netdata
 install -m 600 %{SOURCE1004} %{buildroot}%{_sysconfdir}/sysconfig/ip6tables_netdata
 
+# XCP-ng: systemd delay stop script
+install -m 755 %{SOURCE1005} %{buildroot}%{_libexecdir}/%{name}/netdata-wait-up-and-running.sh
+
 # Scripts must not be in /etc, /usr/libexec is a better place
 mv %{buildroot}%{_sysconfdir}/%{name}/edit-config %{buildroot}%{_libexecdir}/%{name}/edit-config
 # Fix EOL
@@ -501,6 +508,7 @@ fi
 %attr(0750,root,netdata)%{_sbindir}/netdata-install-go-plugins.sh
 %config(noreplace) /etc/sysconfig/iptables_netdata
 %config(noreplace) /etc/sysconfig/ip6tables_netdata
+%{_libexecdir}/%{name}/netdata-wait-up-and-running.sh
 
 %files conf
 %doc README.md
@@ -543,6 +551,9 @@ fi
 %config %{_sysconfdir}/%{name}/%{name}.conf.ui
 
 %changelog
+* Wed Feb 19 2025 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.2
+- Replace 'ExecStop=sleep 10' in systemd service unit with a nicer script
+
 * Thu Feb 06 2025 Thierry Escande <thierry.escande@vates.tech> - 1.44.3-1.1
 - Update to netdata v1.44.3
 - Fix build errors with gcc 4.8
