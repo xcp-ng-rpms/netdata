@@ -68,7 +68,7 @@ ExcludeArch: s390x
 
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
-Release:        4.1%{?dist}
+Release:        4.2%{?dist}
 Summary:        Real-time performance monitoring
 # For a breakdown of the licensing, see license REDISTRIBUTED.md
 License:        GPL-3.0-or-later
@@ -108,6 +108,7 @@ Patch10:        netdata-remove-fonts-1.46.0.patch
 Patch1000:      netdata-v1.47.5-Fix-xcpng-build-for-gcc-4.8.patch
 Patch1001:      netdata-v1.44.3-firewall-management-in-systemd-unit.XCP-ng.patch
 Patch1002:      netdata-v1.44.3-handle-systemd-unit-stop.XCP-ng.patch
+Patch1003:      netdata-v1.47.5-Remove-unsupported-LogNamespace-systemd-service-entr.patch
 
 BuildRequires:  zlib-devel
 BuildRequires:  git
@@ -321,6 +322,7 @@ fi
 %patch1000 -p1
 %patch1001 -p1
 %patch1002 -p1
+%patch1003 -p1
 
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
@@ -641,6 +643,9 @@ fi
 
 
 %changelog
+* Wed Oct 01 2025 Thierry Escande <thierry.escande@vates.tech> - 1.47.5-4.2
+- Remove unsupported LogNamespace systemd service entry
+
 * Wed Feb 19 2025 Thierry Escande <thierry.escande@vates.tech> - 1.47.5-4.1
 - Update to Netdata v1.47.5
 - Rework patch for gcc 4.8 build errors
