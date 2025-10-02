@@ -1,0 +1,31 @@
+From f8ede9cd35a540fa84fd0821afbe43df5b8267ab Mon Sep 17 00:00:00 2001
+From: Thierry Escande <thierry.escande@vates.tech>
+Date: Wed, 1 Oct 2025 14:55:10 +0200
+Subject: [PATCH] Remove unsupported LogNamespace systemd service entry
+Content-Type: text/plain; charset = "utf-8"
+Content-Transfert-Encoding: 8bit
+
+LogNamespace= has been introduced in v245 so it's not supported by
+XCP-ng 8.3 systemd v219. Remove it to avoid warnings when checking
+service units correctness.
+
+Signed-off-by: Thierry Escande <thierry.escande@vates.tech>
+---
+ system/systemd/netdata.service.v235.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/system/systemd/netdata.service.v235.in b/system/systemd/netdata.service.v235.in
+index f95a22f..a7f5b18 100644
+--- a/system/systemd/netdata.service.v235.in
++++ b/system/systemd/netdata.service.v235.in
+@@ -7,7 +7,6 @@ After=network.target network-online.target nss-lookup.target
+ Wants=network-online.target nss-lookup.target
+ 
+ [Service]
+-LogNamespace=netdata
+ Type=simple
+ User=root
+ EnvironmentFile=-/etc/default/netdata
+-- 
+2.51.0
+
