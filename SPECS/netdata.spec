@@ -68,7 +68,7 @@ ExcludeArch: s390x
 
 Name:           netdata
 Version:        %{upver}%{?rcver:~%{rcver}}
-Release:        4.2%{?dist}
+Release:        4.3%{?dist}
 Summary:        Real-time performance monitoring
 # For a breakdown of the licensing, see license REDISTRIBUTED.md
 License:        GPL-3.0-or-later
@@ -306,11 +306,11 @@ fi
 
 %prep
 %setup -qn %{name}-%{upver}%{?rcver:-%{rcver}}
-%patch -P0 -p1
-%patch -P1 -p1
+%patch -P 0 -p1
+%patch -P 1 -p1
 %if 0%{?fedora}
 # Remove embedded font(added in requires)
-%patch -P10 -p1
+%patch -P 10 -p1
 rm -rf src/web/gui/v1/fonts/
 %endif
 # Remove closed source parts if present
@@ -319,10 +319,10 @@ if [ -d src/web/gui/v2 ] ; then
     cp -a src/web/gui/v1/index.html src/web/gui/index.html
 fi
 
-%patch1000 -p1
-%patch1001 -p1
-%patch1002 -p1
-%patch1003 -p1
+%patch -P 1000 -p1
+%patch -P 1001 -p1
+%patch -P 1002 -p1
+%patch -P 1003 -p1
 
 cp %{SOURCE5} .
 ### BEGIN netdata cloud
@@ -643,6 +643,10 @@ fi
 
 
 %changelog
+* Wed May 06 2026 Vincent Michel <vincent.michel@vates.tech> - 1.47.5-4.3
+- Fix the %%patch macro in the specfile to be compatible with rpm 4.20 and above
+- Rebuild with openssl version 3
+
 * Wed Oct 01 2025 Thierry Escande <thierry.escande@vates.tech> - 1.47.5-4.2
 - Remove unsupported LogNamespace systemd service entry
 
